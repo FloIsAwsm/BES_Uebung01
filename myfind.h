@@ -16,12 +16,22 @@
 // for now just use MAx_PATH
 #define MAX_PATH 2048
 
+// right now this is an arbitrary number
+// we can define this later on
+// we can handle MAX_PARAMS-1 parameters
+// 
+#define MAX_PARAMS 100
+
 #define EXIT_SUCCESS 0
 
 #define EXIT_FAILURE 1
 
 /**
  * @brief checks if the string is a valid path
+ * @details checks if the first char of the string is a '-',
+ * if it is we assume it is a parameter,
+ * if not we assume it is a path... It is also possible to
+ * check if it is a valid path and exit the program if not...
  * 
  * @param param string that might be a directory or file
  * @return true if the path is valid, false otherwise
@@ -36,7 +46,7 @@ int do_file(char * file, const char * const * params);
  * @brief checks if the parameters are correct and makes them easier to handle
  * @details checks whether it is possible to find a file with those parameters 
  * (e.g.: searching 2 different names would not lead to a result) and brings them into a form
- * that is easier to handle later on
+ * that is easier to handle later on... it also fills our parameter array
  * 
  * @param params the parameters we have to process
  * @return in this iteration: EXIT_SUCCESS if a search is usefull, EXIT_FAILURE otherwise 
@@ -44,27 +54,45 @@ int do_file(char * file, const char * const * params);
 int parseParams(const char * const * params);
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief calls the parameter functions on a path
+ * @details calls all parameter functions like "-name <name>"
+ * in our parameter list on every directoy and file 
  * 
  * @param path the path we have to use the parameters on
  * @return EXIT_FAILURE or EXIT_SUCCESS
  */
 int handleParams(char * path);
 
-int do_ls(char * path);
+/**
+ * @brief function pointer for our array of parameter functions
+ * @details TODO
+ * 
+ * @param c path
+ * @param r specific parameter if needed
+ * 
+ * @return EXIT_SUCCESS or EXIT_FAILURE
+ */
+typedef int (*paramFunc) (char *, char *);
+
+// array of parameter functions
+// no idea if this would compile ;)
+(paramFunc*) m_Parameters [MAX_PARAMS];
+
+
+/* Those are our parameter functions... we can split the implementatons on those */
+int do_ls(char * path, char * param = NULL);
 
 int do_name(char * path, char * name);
 
 int do_user(char * path, char * user);
 
-int do_userid(char * path, int uid);
+int do_userid(char * path, char * uid);
 
-int do_nouser(char * path);
+int do_nouser(char * path, , char * param = NULL);
 
 int do_path(char * path, char * pattern);
 
-int do_print(char * path);
+int do_print(char * path, char * param = NULL);
 
 int do_type(char * path, char * type);
 
