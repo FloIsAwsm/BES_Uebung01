@@ -1,0 +1,46 @@
+#include <dirent.h>
+#include <stdio.h>
+#include <limits.h>
+#include <unistd.h>
+#include <errno.h>
+
+int main(int argc, char **argv)
+{
+  DIR           *d;
+  struct dirent *dir;
+  unsigned int depth = 0;
+  char* dirName = ".";
+
+  if (argc > 1) {
+    dirName = argv[1];
+  }
+
+  printf("[%s]\n", dirName);
+  PrintDirectory(d, dir, dirName, depth);
+
+  return(0);
+}
+
+
+void PrintDirectory(DIR *d, struct dirent *dir, char *path, unsigned int depth) {
+    errno = 0;
+    if((d = opendir(path)) != NULL) {
+        dir = readdir(d);
+        while (dir != NULL) {
+            printf("[%s]\n", dir->d_name);
+            if(dir->d_type == DT_DIR) {
+                PrintDirectory(d, dir, dir->d_name, depth+1);
+            }
+            dir = readdir(d);
+        }
+        if(closedir(d) != 0) {
+            perror("Error in close!");
+        }
+    }
+    else {
+        if(errno != 0) {
+            fprintf(stderr, "%s\n", strerror(errno));
+            return;
+        }
+    }
+}

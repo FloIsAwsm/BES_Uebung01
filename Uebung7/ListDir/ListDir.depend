@@ -1,0 +1,21 @@
+# depslib dependency file v1.0
+1386066776 source:/home/matthias/Workspace/ListDir/main.c
+	<unistd.h>
+	<sys/types.h>
+	<dirent.h>
+	<stdio.h>
+	<errno.h>
+	<limits.h>
+	<string.h>
+	<stdlib.h>
+
+1386067077 source:/home/matthias/Workspace/ListDir/printDir.c
+	<unistd.h>
+	<sys/types.h>
+	<dirent.h>
+	<stdio.h>
+	<errno.h>
+	<limits.h>
+	<string.h>
+	<stdlib.h>
+

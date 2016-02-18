@@ -74,9 +74,16 @@ int handleParams(char * path);
  */
 typedef int (*paramFunc) (char *, char *);
 
+
+typedef struct
+{
+	paramFunc* func;
+	char * param;
+} sParam;
+
 // array of parameter functions
 // no idea if this would compile ;)
-(paramFunc*) m_Parameters [MAX_PARAMS];
+sParam m_Parameters [MAX_PARAMS];
 
 
 /* Those are our parameter functions... we can split the implementatons on those */
