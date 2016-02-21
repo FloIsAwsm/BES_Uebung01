@@ -1,3 +1,4 @@
+#include <string.h>
 #include "myfind.h"
 
 /* Constants */
@@ -13,7 +14,12 @@ const char* currentDir = ".";
 
 static bool containsPrint = false;
 
-int do_dir(char * dir, const char * const * params)
+bool IsValidPath(char * param)
+{
+	return true;
+}
+
+int do_dir(char * dir, char ** params)
 {
 	static bool firstEntry = true;
 	if (firstEntry)
@@ -24,16 +30,16 @@ int do_dir(char * dir, const char * const * params)
 		}
 	}
 
-	DIR * dir;
+	DIR * pdir;
 	struct dirent * item;
 
-	if(!(dir = opendir(dir)))
+	if(!(pdir = opendir(dir)))
 	{
 		// cannot open dir
 		return EXIT_FAILURE;
 	}
 
-	while ((item = readdir(dir)))
+	while ((item = readdir(pdir)))
 	{
 		char path[PATH_MAX];
 		int len = snprintf(path, sizeof(path)-1, "%s/%s", dir, item->d_name);
@@ -51,13 +57,16 @@ int do_dir(char * dir, const char * const * params)
 			do_file(path, params);
 		}
 	}
-	closedir(dir);
+	closedir(pdir);
 	return EXIT_SUCCESS;
 }
 
-int do_file(char * file, const char * const * params)
+int do_file(char * file, char ** params)
 {
-	handleParams(file);
+	if(params)
+	{
+	}
+	return handleParams(file);
 }
 
 int handleParams(char * path)
@@ -65,7 +74,7 @@ int handleParams(char * path)
 	int index = 0;
 	while(m_Parameters[index].func != NULL)
 	{
-		if(*(m_Parameters[index].func)(path, m_Parameters[index].param) == EXIT_FAILURE)
+		if((m_Parameters[index].func)(path, m_Parameters[index].param) == EXIT_FAILURE)
 		{
 			return EXIT_FAILURE;
 		}
@@ -77,7 +86,7 @@ int handleParams(char * path)
 	return EXIT_SUCCESS;
 }
 
-int parseParams(const char * const * params)
+int parseParams(char ** params)
 {
 	int index = 0;
 	m_Parameters[index].func = NULL;
@@ -109,8 +118,11 @@ int parseParams(const char * const * params)
 	return EXIT_SUCCESS;
 }
 
-int do_print(char * path, char * param = NULL)
+int do_print(char * path, char * param/* = NULL */)
 {
+	if(param == NULL)
+	{
+	}
 	printf("%s\n", path);
 	return EXIT_SUCCESS;
 }

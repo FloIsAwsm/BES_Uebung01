@@ -45,11 +45,11 @@
  * @param param string that might be a directory or file
  * @return true if the path is valid, false otherwise
  */
-bool IsValidPath(char * param);
+bool IsValidPath(const char * param);
 
-int do_dir(char * dir, char ** params);
+int do_dir(char * dir, const char * const * params);
 
-int do_file(char * file, char ** params);
+int do_file(char * file, const char * const * params);
 
 /**
  * @brief checks if the parameters are correct and makes them easier to handle
@@ -60,7 +60,7 @@ int do_file(char * file, char ** params);
  * @param params the parameters we have to process
  * @return in this iteration: EXIT_SUCCESS if a search is usefull, EXIT_FAILURE otherwise 
  */
-int parseParams(char ** params);
+int parseParams(const char * const * params);
 
 /**
  * @brief calls the parameter functions on a path
