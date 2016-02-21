@@ -20,7 +20,7 @@ static sParam m_Parameters [MAX_PARAMS];
 
 bool IsValidPath(char * param)
 {
-	if(param == NULL)
+	if(param[0] == '-')
 	{
 		return false;
 	}
@@ -86,6 +86,7 @@ int handleParams(char * path)
 		{
 			return EXIT_FAILURE;
 		}
+		index++;
 	}
 	if(!containsPrint)
 	{

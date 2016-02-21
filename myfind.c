@@ -86,6 +86,7 @@ int handleParams(char * path)
 		{
 			return EXIT_FAILURE;
 		}
+		index++;
 	}
 	if(!containsPrint)
 	{
@@ -121,6 +122,7 @@ int parseParams(char ** params)
 			return EXIT_FAILURE;
 		}
 		index++;
+		params++;
 	}
 	m_Parameters[index].func = NULL;
 	return EXIT_SUCCESS;
