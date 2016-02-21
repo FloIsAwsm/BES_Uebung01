@@ -14,10 +14,16 @@ const char* currentDir = ".";
 
 static bool containsPrint = false;
 
+// array of parameter functions
+// no idea if this would compile ;)
+static sParam m_Parameters [MAX_PARAMS];
+
 bool IsValidPath(char * param)
 {
 	if(param)
+	{
 		return false;
+	}
 	return true;
 }
 

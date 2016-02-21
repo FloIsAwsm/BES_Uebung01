@@ -90,10 +90,6 @@ typedef struct
 	char * param;
 } sParam;
 
-// array of parameter functions
-// no idea if this would compile ;)
-sParam m_Parameters [MAX_PARAMS];
-
 
 /* Those are our parameter functions... we can split the implementatons on those */
 int do_ls(char * path, char * param /* = NULL */);
