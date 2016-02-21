@@ -1,0 +1,116 @@
+#include "myfind.h"
+
+/* Constants */
+const char * command_ls = "-ls";
+const char * command_print = "-print";
+const char * err_msg_unknown_pred = "unknown predicate: ";
+const char * err_msg_missing_arg = "missing argument to ";
+const char * command_user = "-user";
+const char * command_name = "-name";
+const char * command_type = "-type";
+const char* upperDir = "..";
+const char* currentDir = ".";
+
+static bool containsPrint = false;
+
+int do_dir(char * dir, const char * const * params)
+{
+	static bool firstEntry = true;
+	if (firstEntry)
+	{
+		if(parseParams(params) == EXIT_FAILURE)
+		{
+			return EXIT_FAILURE;
+		}
+	}
+
+	DIR * dir;
+	struct dirent * item;
+
+	if(!(dir = opendir(dir)))
+	{
+		// cannot open dir
+		return EXIT_FAILURE;
+	}
+
+	while ((item = readdir(dir)))
+	{
+		char path[PATH_MAX];
+		int len = snprintf(path, sizeof(path)-1, "%s/%s", dir, item->d_name);
+		path[len] = 0;
+		if(item->d_type == DT_DIR)
+		{
+			if (!(strcmp(item->d_name, currentDir) == 0 || strcmp(item->d_name, upperDir) == 0))
+			{
+				handleParams(path);
+				do_dir(path, params); // what if we return with EXIT_FAILURE
+			}
+		}
+		else
+		{
+			do_file(path, params);
+		}
+	}
+	closedir(dir);
+	return EXIT_SUCCESS;
+}
+
+int do_file(char * file, const char * const * params)
+{
+	handleParams(file);
+}
+
+int handleParams(char * path)
+{
+	int index = 0;
+	while(m_Parameters[index].func != NULL)
+	{
+		if(*(m_Parameters[index].func)(path, m_Parameters[index].param) == EXIT_FAILURE)
+		{
+			return EXIT_FAILURE;
+		}
+	}
+	if(!containsPrint)
+	{
+		do_print(path, NULL);
+	}
+	return EXIT_SUCCESS;
+}
+
+int parseParams(const char * const * params)
+{
+	int index = 0;
+	m_Parameters[index].func = NULL;
+	while((*params) != NULL && index < (MAX_PARAMS-1))
+	{
+		if(strcmp((*params), command_print) == 0)
+		{
+			m_Parameters[index].func = &do_print;
+			m_Parameters[index].param = NULL;
+			containsPrint = true;
+		}
+		/*
+		else if(strcmp((*params), command_ls) == 0)
+		{
+			m_Parameters[index].func = &do_ls;
+			m_Parameters[index].param = NULL;
+			containsPrint = true;	
+		}
+		*/
+		else
+		{
+			// print error message
+			printf("%s%s\n", err_msg_unknown_pred, (*params));
+			return EXIT_FAILURE;
+		}
+		index++;
+	}
+	m_Parameters[index].func = NULL;
+	return EXIT_SUCCESS;
+}
+
+int do_print(char * path, char * param = NULL)
+{
+	printf("%s\n", path);
+	return EXIT_SUCCESS;
+}
