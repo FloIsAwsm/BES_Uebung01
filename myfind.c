@@ -20,7 +20,7 @@ static sParam m_Parameters [MAX_PARAMS];
 
 bool IsValidPath(char * param)
 {
-	if(param)
+	if(param[0] == '-')
 	{
 		return false;
 	}

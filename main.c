@@ -7,9 +7,10 @@ int main(int argc, char** argv)
 
 	if(argv[1] != NULL && IsValidPath(argv[1]))
 	{
+		//printf("%s", argv[1]);
 		return do_dir(argv[1], (argv+2));
 	}
-	else if (argv[1] == NULL)
+	else if (argv[1] != NULL)
 	{
 		return do_dir(".", (argv+1));
 	}
