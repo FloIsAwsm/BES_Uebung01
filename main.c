@@ -28,6 +28,7 @@ int main(int argc, char** argv)
 	while(*temp != NULL)
 	{
 		printf("%s ", *temp);
+		temp++;
 	}
 	printf("\n");
 
