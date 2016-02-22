@@ -190,6 +190,7 @@ int do_dir(char * dir, char ** params)
 		return EXIT_FAILURE;
 	}
 
+	errno = 0;
 	while ((item = readdir(pdir)))
 	{
 		char path[PATH_MAX];
@@ -207,6 +208,11 @@ int do_dir(char * dir, char ** params)
 		{
 			do_file(path, params);
 		}
+		errno = 0;
+	}
+	if(errno != 0)
+	{
+		printf("%s: %s\n", app_name, strerror(errno));
 	}
 	closedir(pdir);
 	return EXIT_SUCCESS;
