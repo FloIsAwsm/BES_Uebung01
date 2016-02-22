@@ -1,12 +1,17 @@
 /**
- * TODO file header
- * das wäre eine basis wie wir unser projekt anlegen können
- * wir haben mehr als genug funktionen die man alleine entwickeln kann
- * vorallem aber auch gleichzeitig...
- * Es sollte dabei auch kein problem sein auf einer file zu arbeiten...
- * genaueres habe ich aber erst wenn ich mich selber in den git workflow rein gearbeitet habe...
- * Ihr könnt entweder in dieser file kommentieren und dann pushen oder (falls ihr es am handy schon habt)
- * per Telegram schreiben... es gibt auch eine telegram desktop app für windows 10
+ * @file myfind.h
+ * 
+ * Beispiel 1
+ * 
+ * @author Florian Froestl <florian.froestl@technikum-wien.at>
+ * @author
+ * @author
+ * 
+ * @date 2016/02/22
+ * 
+ * @version 100
+ * 
+ * @todo modify includes (move to myfind.c if possible)
  */
 
 #ifndef MYFIND_H
@@ -17,95 +22,67 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include <errno.h>
-#include <limits.h>
+#include <limits.h> // PATH_MAX
 #include <unistd.h>
 
+/**
+ * @brief global variable for the application name
+ */
+extern char * app_name;
 
-// there is a define similar to that, that is used by most system calls but i'm not sure what it's name is
-// for now just use MAx_PATH
-#define MAX_PATH 2048
-
-// right now this is an arbitrary number
-// we can define this later on
-// we can handle MAX_PARAMS-1 parameters
-// 
+/**
+ * @brief the maximal amout of parameters
+ * @details the maximal amount of parameters that can be passed to the program
+ * 
+ * @todo this is an arbitrary number at the moment...
+ */
 #define MAX_PARAMS 100
 
+/**
+ * @brief success return code
+ * @detais defines the return code for a successful operation
+ */
 #define EXIT_SUCCESS 0
 
+/**
+ * @brief failure return code
+ * @detais defines the return code for a failed operation or an error
+ */
 #define EXIT_FAILURE 1
 
 /**
  * @brief checks if the string is a valid path
  * @details checks if the first char of the string is a '-',
  * if it is we assume it is a parameter,
- * if not we assume it is a path... It is also possible to
- * check if it is a valid path and exit the program if not...
+ * if not we assume it is a path
  * 
- * @param param string that might be a directory or file
- * @return true if the path is valid, false otherwise
+ * @param param c-string that is either a command or a path
+ * @return false if param is a command, true otherwise
  */
 bool IsValidPath(char * param);
 
-int do_dir(char * dir, char ** params);
-
-int do_file(char * file, char ** params);
-
 /**
- * @brief checks if the parameters are correct and makes them easier to handle
- * @details checks whether it is possible to find a file with those parameters 
- * (e.g.: searching 2 different names would not lead to a result) and brings them into a form
- * that is easier to handle later on... it also fills our parameter array
+ * @brief recursive function to be called on every directory
+ * @details this function is called on every directory. It opens the
+ * directory and calls the handleParams function for every directory
+ * in it.
  * 
- * @param params the parameters we have to process
- * @return in this iteration: EXIT_SUCCESS if a search is usefull, EXIT_FAILURE otherwise 
- */
-int parseParams(char ** params);
-
-/**
- * @brief calls the parameter functions on a path
- * @details calls all parameter functions like "-name <name>"
- * in our parameter list on every directoy and file 
- * 
- * @param path the path we have to use the parameters on
- * @return EXIT_FAILURE or EXIT_SUCCESS
- */
-int handleParams(char * path);
-
-/**
- * @brief function pointer for our array of parameter functions
- * @details TODO
- * 
- * @param c path
- * @param r specific parameter if needed
+ * @param dir cstring containing the name of the directory
+ * @param params array of cstrings containing the commands and parameters
  * 
  * @return EXIT_SUCCESS or EXIT_FAILURE
  */
-typedef int (*paramFunc) (char *, char *);
+int do_dir(char * dir, char ** params);
 
-
-typedef struct
-{
-	paramFunc func;
-	char * param;
-} sParam;
-
-
-/* Those are our parameter functions... we can split the implementatons on those */
-int do_ls(char * path, char * param /* = NULL */);
-
-int do_name(char * path, char * name);
-
-int do_user(char * path, char * user);
-
-int do_userid(char * path, char * uid);
-
-int do_nouser(char * path, char * param /* = NULL */);
-
-int do_path(char * path, char * pattern);
-
-int do_print(char * path, char * param/* = NULL */);
-
-int do_type(char * path, char * type);
+/**
+ * @brief [brief description] 
+ * @details [long description]
+ * 
+ * @param file [description]
+ * @param params [description]
+ * 
+ * @return [description]
+ */
+int do_file(char * file, char ** params);
 
 #endif
