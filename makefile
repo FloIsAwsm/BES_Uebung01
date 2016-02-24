@@ -1,13 +1,15 @@
 ##
 ## @file Makefile
 ## BES Uebung## Beispiel 1##
-## @author Florian Froestl## @author ## @date 2016/02/23
+## @author Florian Froestl
+## @author 
+## @author 
+## @date 2016/02/23
 ##
 ## @version $Revision: 1000 $
 ##
 ## @todo
 ##
-##  $
 ##
 ## Last Modified: $Author: $
 ##
