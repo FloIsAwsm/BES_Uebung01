@@ -3,9 +3,9 @@
  * 
  * Beispiel 1
  * 
- * @author Florian Froestl <florian.froestl@technikum-wien.at>
- * @author
- * @author
+ * @author Florian Froestl 	<florian.froestl@technikum-wien.at>
+ * @author David Boisits	<david.boisits@technikum-wien.at>
+ * @author Markus Diewald	<markus.diewald@technikum-wien.at>
  * 
  * @date 2016/02/22
  * 
@@ -24,6 +24,8 @@
 #include <errno.h>
 #include <limits.h> // PATH_MAX
 #include <unistd.h>
+#include <fnmatch.h>
+#include <sys/stat.h>
 
 /**
  * @brief global variable for the application name
@@ -84,5 +86,9 @@ int do_dir(char * dir, char ** params);
  * @return [description]
  */
 int do_file(char * file, char ** params);
+
+int do_name(const char *pattern, const char *path, int flags);
+
+int do_ls(char *path, char *param);
 
 #endif

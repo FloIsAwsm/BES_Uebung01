@@ -89,6 +89,8 @@ typedef struct
  */
 static sParam m_Parameters [MAX_PARAMS];
 
+
+
 /**
  * @brief [brief description]
  * @details [long description]
@@ -98,7 +100,38 @@ static sParam m_Parameters [MAX_PARAMS];
  * 
  * @return [description]
  */
-int do_ls(char * path, char * param);
+int do_ls(char *path, char *param)
+{
+    struct stat fileStat;
+    if(stat(path,&fileStat) < 0)
+    {
+        EXIT_FAILURE;
+    }
+
+    printf("Information for %s\n",path);
+    printf("---------------------------\n");
+    printf("File Size: \t\t%d bytes\n",fileStat.st_size);
+    printf("Number of Links: \t%d\n",fileStat.st_nlink);
+    printf("File inode: \t\t%d\n",fileStat.st_ino);
+
+    printf("File Permissions: \t");
+    printf( (S_ISDIR(fileStat.st_mode)) ? "d" : "-");
+    printf( (fileStat.st_mode & S_IRUSR) ? "r" : "-");
+    printf( (fileStat.st_mode & S_IWUSR) ? "w" : "-");
+    printf( (fileStat.st_mode & S_IXUSR) ? "x" : "-");
+    printf( (fileStat.st_mode & S_IRGRP) ? "r" : "-");
+    printf( (fileStat.st_mode & S_IWGRP) ? "w" : "-");
+    printf( (fileStat.st_mode & S_IXGRP) ? "x" : "-");
+    printf( (fileStat.st_mode & S_IROTH) ? "r" : "-");
+    printf( (fileStat.st_mode & S_IWOTH) ? "w" : "-");
+    printf( (fileStat.st_mode & S_IXOTH) ? "x" : "-");
+    printf("\n\n");
+
+    printf("The file %s a symbolic link\n", (S_ISLNK(fileStat.st_mode)) ? "is" : "is not");
+
+    EXIT_SUCCESS;
+}
+
 
 /**
  * @brief [brief description]
@@ -109,7 +142,24 @@ int do_ls(char * path, char * param);
  * 
  * @return [description]
  */
-int do_name(char * path, char * name);
+int do_name(const char *pattern, const char *path, int flags)
+{
+    DIR *dir=opendir(path);
+    struct dirent entry;
+    struct dirent *dp=&entry;
+
+    while((dp = readdir(dir)) != NULL)
+    {
+        if ((fnmatch(pattern, dp->d_name, flags)) == 0)
+        {
+            printf("%s\n", dp->d_name);
+        }
+    }
+    closedir(dir);
+    return EXIT_SUCCESS;
+}
+
+
 
 /**
  * @brief [brief description]
