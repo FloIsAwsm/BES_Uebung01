@@ -19,7 +19,7 @@
 ##
 
 CC=gcc
-CFLAGS=-DDEBUG -Wall -pedantic -Werror -Wextra -Wstrict-prototypes -fno-common -g -O3 -std=gnu1x
+CFLAGS=-DDEBUG -Wall -pedantic -Werror -Wextra -Wstrict-prototypes -fno-common -g -O3 -std=gnu99
 CP=cp
 CD=cd
 MV=mv
