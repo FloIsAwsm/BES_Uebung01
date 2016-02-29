@@ -162,7 +162,7 @@ int do_type(char * path, char * type);
 
 bool IsValidPath(char * param)
 {
-	if(param[0] == '-' && param[1] != NULL)
+	if(param[0] == '-')
 	{
 		return false;
 	}
