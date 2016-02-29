@@ -4,8 +4,8 @@
  * Beispiel 1
  * 
  * @author Florian Froestl <florian.froestl@technikum-wien.at>
- * @author
- * @author
+ * @author David Boisits <david.boisits@technikum-wien.at>
+ * @author Markus Diewald <markus.diewald@technikum-wien.at>
  * 
  * @date 2016/02/22
  * 
@@ -18,6 +18,11 @@
  */
 #include <string.h>
 #include "myfind.h"
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <stdio.h>
 
 /* Constants */
 /* Error messages */
@@ -32,6 +37,12 @@ const char * command_type = "-type";
 /* directory names */
 const char* upperDir = "..";
 const char* currentDir = ".";
+
+/**
+ * @brief [brief description]
+ * @details [long description]
+ */
+static bool containsPrint = false;
 
 /**
  * @brief global variable for the application name
@@ -78,10 +89,12 @@ typedef struct
 } sParam;
 
 /**
- * @brief currently holds up to MAX_PARAMS-2 commands
+ * @brief [brief description]
  * @details [long description]
  */
 static sParam m_Parameters [MAX_PARAMS];
+
+
 
 /**
  * @brief [brief description]
@@ -92,7 +105,38 @@ static sParam m_Parameters [MAX_PARAMS];
  * 
  * @return [description]
  */
-int do_ls(char * path, char * param);
+int do_ls(char *path)
+{
+    struct stat fileStat;
+    if(stat(path,&fileStat) < 0)
+    {
+        return EXIT_FAILURE;
+    }
+
+    printf("Information for %s\n",path);
+    printf("---------------------------\n");
+    printf("File Size: \t\t%d bytes\n", (int) fileStat.st_size);
+    printf("Number of Links: \t%d\n",fileStat.st_nlink);
+    printf("File inode: \t\t%d\n", (int) fileStat.st_ino);
+
+    printf("File Permissions: \t");
+    printf( (S_ISDIR(fileStat.st_mode)) ? "d" : "-");
+    printf( (fileStat.st_mode & S_IRUSR) ? "r" : "-");
+    printf( (fileStat.st_mode & S_IWUSR) ? "w" : "-");
+    printf( (fileStat.st_mode & S_IXUSR) ? "x" : "-");
+    printf( (fileStat.st_mode & S_IRGRP) ? "r" : "-");
+    printf( (fileStat.st_mode & S_IWGRP) ? "w" : "-");
+    printf( (fileStat.st_mode & S_IXGRP) ? "x" : "-");
+    printf( (fileStat.st_mode & S_IROTH) ? "r" : "-");
+    printf( (fileStat.st_mode & S_IWOTH) ? "w" : "-");
+    printf( (fileStat.st_mode & S_IXOTH) ? "x" : "-");
+    printf("\n\n");
+
+    printf("The file %s a symbolic link\n", (S_ISLNK(fileStat.st_mode)) ? "is" : "is not");
+
+    return EXIT_SUCCESS;
+}
+
 
 /**
  * @brief [brief description]
@@ -103,7 +147,24 @@ int do_ls(char * path, char * param);
  * 
  * @return [description]
  */
-int do_name(char * path, char * name);
+int do_name(const char *pattern, const char *path, int flags)
+{
+    DIR *dir=opendir(path);
+    struct dirent entry;
+    struct dirent *dp=&entry;
+
+    while((dp = readdir(dir)) != NULL)
+    {
+        if ((fnmatch(pattern, dp->d_name, flags)) == 0)
+        {
+            printf("%s\n", dp->d_name);
+        }
+    }
+    closedir(dir);
+    return EXIT_SUCCESS;
+}
+
+
 
 /**
  * @brief [brief description]
@@ -125,7 +186,7 @@ int do_user(char * path, char * user);
  * 
  * @return [description]
  */
-int do_nouser(char * path, char * param);
+int do_nouser(char * path, char * param /* = NULL */);
 
 /**
  * @brief [brief description]
@@ -171,6 +232,9 @@ bool IsValidPath(char * param)
 
 int do_dir(char * dir, char ** params)
 {
+	DIR * pdir;		
+	struct dirent * item;
+	
 	static bool firstEntry = true;
 	if (firstEntry)
 	{
@@ -180,17 +244,14 @@ int do_dir(char * dir, char ** params)
 		}
 	}
 
-	DIR * pdir;
-	struct dirent * item;
+	
 
 	if(!(pdir = opendir(dir)))
 	{
-		printf("%s: %s\n", app_name, strerror(errno));
-		// cannot open dir
+		/* cannot open dir */
 		return EXIT_FAILURE;
 	}
 
-	errno = 0;
 	while ((item = readdir(pdir)))
 	{
 		char path[PATH_MAX];
@@ -201,18 +262,13 @@ int do_dir(char * dir, char ** params)
 			if (!(strcmp(item->d_name, currentDir) == 0 || strcmp(item->d_name, upperDir) == 0))
 			{
 				handleParams(path);
-				do_dir(path, params); // what if we return with EXIT_FAILURE
+				do_dir(path, params); /* what if we return with EXIT_FAILURE */
 			}
 		}
 		else
 		{
 			do_file(path, params);
 		}
-		errno = 0;
-	}
-	if(errno != 0)
-	{
-		printf("%s: %s\n", app_name, strerror(errno));
 	}
 	closedir(pdir);
 	return EXIT_SUCCESS;
@@ -237,15 +293,18 @@ int handleParams(char * path)
 		}
 		index++;
 	}
+	if(!containsPrint)
+	{
+		do_print(path, NULL);
+	}
 	return EXIT_SUCCESS;
 }
 
 int parseParams(char ** params)
 {
-	bool containsPrint = false;
 	int index = 0;
 	m_Parameters[index].func = NULL;
-	while((*params) != NULL && index < (MAX_PARAMS-2))
+	while((*params) != NULL && index < (MAX_PARAMS-1))
 	{
 		if(strcmp((*params), command_print) == 0)
 		{
@@ -263,16 +322,12 @@ int parseParams(char ** params)
 		*/
 		else
 		{
-			// print error message
+			/* print error message */
 			printf("%s%s\n", err_msg_unknown_pred, (*params));
 			return EXIT_FAILURE;
 		}
 		index++;
 		params++;
-	}
-	if(!containsPrint)
-	{
-		m_Parameters[index++].func = &do_print;
 	}
 	m_Parameters[index].func = NULL;
 	return EXIT_SUCCESS;

@@ -1,17 +1,19 @@
 ##
 ## @file Makefile
-## BES Uebung## Beispiel 1##
-## @author Florian Froestl
-## @author 
-## @author 
-## @date 2016/02/23
+## Betriebssysteme Hello Makefile
+## Beispiel 0
 ##
-## @version $Revision: 1000 $
+## @author Thomas M. Galla <galla@technikum-wien.at> (tdxxx)
+## @author Bernd Petrovitsch <bernd.petrovitsch@technikum-wien.at>
+## @date 2005/02/22
+##
+## @version $Revision: 1689 $
 ##
 ## @todo
 ##
+## URL: $HeadURL: https://svn.petrovitsch.priv.at/ICSS-BES/trunk/2015/CIS/lu/hello/Makefile $
 ##
-## Last Modified: $Author: $
+## Last Modified: $Author: tom $
 ##
 
 ##
@@ -19,7 +21,7 @@
 ##
 
 CC=gcc
-CFLAGS=-DDEBUG -Wall -pedantic -Werror -Wextra -Wstrict-prototypes -fno-common -g -O3 -std=gnu99
+CFLAGS=-DDEBUG -Wall -pedantic -Werror -Wextra -Wstrict-prototypes -fno-common -g -O3
 CP=cp
 CD=cd
 MV=mv

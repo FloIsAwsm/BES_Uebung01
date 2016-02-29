@@ -18,17 +18,16 @@
 
 int main(int argc, char** argv)
 {
-	// first write the application name to a global variable
+	/* first write the application name to a global variable */
 	app_name = argv[0];
-	char ** temp = argv;
 	/* prevent warnings regarding unused params */
 	argc = argc;
 
-	// now print the application name and the parameters
-	while(*temp != NULL)
+	/* now print the application name and the parameters */
+	while(argv != NULL)
 	{
-		printf("%s ", *temp);
-		temp++;
+		printf("%s ", *argv);
+		argv++;
 	}
 	printf("\n");
 
@@ -36,8 +35,17 @@ int main(int argc, char** argv)
 	{
 		return do_dir(argv[1], (argv+2));
 	}
-	else
+	else if (argv[1] != NULL)
 	{
 		return do_dir(".", (argv+1));
 	}
+	else if (argv[1] == NULL)
+	{
+		return do_dir(".", (argv+1));
+	}
+	else
+	{
+		printf("%s: '%s': No such file or directory\n", argv[0], argv[1]);
+	}
+	return EXIT_SUCCESS;
 }
