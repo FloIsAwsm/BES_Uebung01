@@ -312,6 +312,18 @@ int parseParams(char ** params)
 			m_Parameters[index].param = NULL;
 			containsPrint = true;
 		}
+		else if(strcmp((*params), command_ls) == 0)
+		{
+			m_Parameters[index].func = &do_ls;
+			m_Parameters[index].param = NULL;
+			containsPrint = true;	
+		}
+		else if(strcmp((*params), command_name) == 0)
+		{
+			m_Parameters[index].func = &do_name;
+			m_Parameters[index].param = NULL;
+			containsPrint = true;	
+		}
 		/*
 		else if(strcmp((*params), command_ls) == 0)
 		{
