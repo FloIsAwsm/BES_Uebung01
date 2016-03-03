@@ -153,11 +153,13 @@ int do_ls(char *path, char *pattern)
  */
 int do_name(char *path, char *pattern);
 
-int do_name(char * path, char * pattern)
+int do_name(char *path, char *pattern)
 {
-	int flags = FNM_PATHNAME | FNM_PERIOD;
+	int flags = 0;
 	
-	if (!fnmatch(pattern, path, flags))    
+	/*printf("pattern: %s path: %s\n", pattern, path);*/
+	
+	if (fnmatch(pattern, path, flags) == 0)    
 	{
 		return EXIT_SUCCESS;
     }
@@ -200,10 +202,6 @@ int do_nouser(char * path, char * param /* = NULL */);
  */
 int do_path(char * path, char * pattern);
 
-int do_path(char *path, char *pattern)
-{
-	
-}
 
 /**
  * @brief prints the path on the console
