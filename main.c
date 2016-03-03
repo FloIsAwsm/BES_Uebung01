@@ -17,14 +17,15 @@
 #include "myfind.h"
 
 int main(int argc, char** argv)
-{
-	// first write the application name to a global variable
+{	
+	/* first write the application name to a global variable*/
 	app_name = argv[0];
 	char ** temp = argv;
 	/* prevent warnings regarding unused params */
 	argc = argc;
+	
 
-	// now print the application name and the parameters
+	/* now print the application name and the parameters*/
 	while(*temp != NULL)
 	{
 		printf("%s ", *temp);
@@ -48,4 +49,10 @@ int main(int argc, char** argv)
 	{
 		printf("%s: '%s': No such file or directory\n", argv[0], argv[1]);
 	}
+	/*int i;
+	i = do_user(".", argv[2]);
+	
+	i = do_nouser("./test", NULL);*/
+	
+	return 0;
 }

@@ -120,7 +120,40 @@ int do_name(char * path, char * name);
  * 
  * @return [description]
  */
-int do_user(char * path, char * user);
+int do_user(char * path, char * user)
+{
+	struct stat buf;
+	long int uid;
+	long int item_uid;
+	struct passwd *get_uid;
+	char *pEnd;
+	
+	if(stat(path, &buf) == -1)
+	{
+		perror("stat");
+		return EXIT_FAILURE;
+	}
+	item_uid = buf.st_uid;
+	get_uid = getpwnam(user);
+	if(get_uid == NULL) /* Kein User mit eingegebenem Usernamen */
+	{
+		uid = strtol(user,&pEnd,10);
+		get_uid = getpwuid(uid);
+		
+		if(get_uid==NULL)
+			return EXIT_FAILURE; 	/* Auch kein User mit eingegebener UID */
+		else
+			uid = get_uid->pw_uid;
+	}
+	else
+		uid = get_uid->pw_uid;	/* Eingegebner Parameter war ein Username */
+
+
+	if(item_uid == uid)
+		return EXIT_SUCCESS;
+	else
+		return EXIT_FAILURE;	
+}
 
 /**
  * @brief [brief description]
@@ -131,7 +164,29 @@ int do_user(char * path, char * user);
  * 
  * @return [description]
  */
-int do_nouser(char * path, char * param /* = NULL */);
+int do_nouser(char * path, char * param /* = NULL */)
+{
+	struct passwd *get_uid;
+	struct stat buf;
+	int item_uid;
+	int uid;
+	
+	if(stat(path, &buf) == -1)
+	{
+		perror("stat");
+		return EXIT_FAILURE;
+	}
+	item_uid = buf.st_uid;
+	
+	get_uid = getpwuid(item_uid);
+	uid = get_uid->pw_uid;	
+	
+	if(get_uid != NULL)
+		printf("UID: %d\n", uid);
+		
+	return EXIT_SUCCESS;
+	
+}
 
 /**
  * @brief [brief description]
@@ -263,6 +318,13 @@ int parseParams(char ** params)
 			containsPrint = true;	
 		}
 		*/
+		else if(strcmp((*params), command_user) == 0)
+		{
+			m_Parameters[index].func = &do_user;
+			m_Parameters[index].param = *(params+1);
+			params++;
+			containsPrint = false;	
+		}
 		else
 		{
 			// print error message
