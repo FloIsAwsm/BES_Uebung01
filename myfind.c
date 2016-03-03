@@ -27,6 +27,7 @@ const char * err_msg_missing_arg = "missing argument to ";
 const char * command_ls = "-ls";
 const char * command_print = "-print";
 const char * command_user = "-user";
+const char * command_nouser = "-nouser";
 const char * command_name = "-name";
 const char * command_type = "-type";
 /* directory names */
@@ -138,12 +139,12 @@ int do_user(char * path, char * user)
 	if(get_uid == NULL) /* Kein User mit eingegebenem Usernamen */
 	{
 		uid = strtol(user,&pEnd,10);
-		get_uid = getpwuid(uid);
+		/*get_uid = getpwuid(uid);
 		
 		if(get_uid==NULL)
 			return EXIT_FAILURE; 	/* Auch kein User mit eingegebener UID */
-		else
-			uid = get_uid->pw_uid;
+		/*else
+			uid = get_uid->pw_uid;*/
 	}
 	else
 		uid = get_uid->pw_uid;	/* Eingegebner Parameter war ein Username */
@@ -170,21 +171,19 @@ int do_nouser(char * path, char * param /* = NULL */)
 	struct stat buf;
 	int item_uid;
 	int uid;
-	
+
 	if(stat(path, &buf) == -1)
 	{
 		perror("stat");
 		return EXIT_FAILURE;
 	}
 	item_uid = buf.st_uid;
-	
+
 	get_uid = getpwuid(item_uid);
-	uid = get_uid->pw_uid;	
-	
-	if(get_uid != NULL)
-		printf("UID: %d\n", uid);
-		
-	return EXIT_SUCCESS;
+	if(get_uid == NULL)
+		return EXIT_SUCCESS;
+	else
+		return EXIT_FAILURE;
 	
 }
 
@@ -323,6 +322,12 @@ int parseParams(char ** params)
 			m_Parameters[index].func = &do_user;
 			m_Parameters[index].param = *(params+1);
 			params++;
+			containsPrint = false;	
+		}
+		else if(strcmp((*params), command_nouser) == 0)
+		{
+			m_Parameters[index].func = &do_nouser;
+			m_Parameters[index].param = NULL;
 			containsPrint = false;	
 		}
 		else
