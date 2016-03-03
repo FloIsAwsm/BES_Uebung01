@@ -87,8 +87,4 @@ int do_dir(char * dir, char ** params);
  */
 int do_file(char * file, char ** params);
 
-int do_name(const char *pattern, const char *path, int flags);
-
-int do_ls(char *path);
-
 #endif

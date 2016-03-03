@@ -20,14 +20,15 @@ int main(int argc, char** argv)
 {
 	/* first write the application name to a global variable */
 	app_name = argv[0];
+	char ** temp = argv;
 	/* prevent warnings regarding unused params */
 	argc = argc;
 
 	/* now print the application name and the parameters */
-	while(argv != NULL)
+	while(*temp != NULL)
 	{
-		printf("%s ", *argv);
-		argv++;
+		printf("%s ", *temp);
+		temp++;
 	}
 	printf("\n");
 

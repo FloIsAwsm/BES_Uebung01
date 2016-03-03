@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <stdio.h>
+#include <fnmatch.h>
 
 /* Constants */
 /* Error messages */
@@ -105,7 +106,10 @@ static sParam m_Parameters [MAX_PARAMS];
  * 
  * @return [description]
  */
-int do_ls(char *path)
+int do_ls(char *path, char *pattern);
+
+/*
+int do_ls(char *path, char *pattern)
 {
     struct stat fileStat;
     if(stat(path,&fileStat) < 0)
@@ -136,7 +140,7 @@ int do_ls(char *path)
 
     return EXIT_SUCCESS;
 }
-
+*/
 
 /**
  * @brief [brief description]
@@ -147,21 +151,18 @@ int do_ls(char *path)
  * 
  * @return [description]
  */
-int do_name(const char *pattern, const char *path, int flags)
-{
-    DIR *dir=opendir(path);
-    struct dirent entry;
-    struct dirent *dp=&entry;
+int do_name(char *path, char *pattern);
 
-    while((dp = readdir(dir)) != NULL)
-    {
-        if ((fnmatch(pattern, dp->d_name, flags)) == 0)
-        {
-            printf("%s\n", dp->d_name);
-        }
+int do_name(char * path, char * pattern)
+{
+	int flags = FNM_PATHNAME | FNM_PERIOD;
+	
+	if (!fnmatch(pattern, path, flags))    
+	{
+		return EXIT_SUCCESS;
     }
-    closedir(dir);
-    return EXIT_SUCCESS;
+    
+    return EXIT_FAILURE;
 }
 
 
@@ -198,6 +199,11 @@ int do_nouser(char * path, char * param /* = NULL */);
  * @return [description]
  */
 int do_path(char * path, char * pattern);
+
+int do_path(char *path, char *pattern)
+{
+	
+}
 
 /**
  * @brief prints the path on the console
@@ -312,17 +318,20 @@ int parseParams(char ** params)
 			m_Parameters[index].param = NULL;
 			containsPrint = true;
 		}
+		/*
 		else if(strcmp((*params), command_ls) == 0)
 		{
 			m_Parameters[index].func = &do_ls;
 			m_Parameters[index].param = NULL;
 			containsPrint = true;	
 		}
+		*/
+		
 		else if(strcmp((*params), command_name) == 0)
 		{
 			m_Parameters[index].func = &do_name;
-			m_Parameters[index].param = NULL;
-			containsPrint = true;	
+			m_Parameters[index].param = *(params+1);
+			params++;
 		}
 		/*
 		else if(strcmp((*params), command_ls) == 0)
