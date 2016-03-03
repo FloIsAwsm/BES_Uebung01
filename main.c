@@ -4,7 +4,7 @@
  * Beispiel 1
  * 
  * @author Florian Froestl <florian.froestl@technikum-wien.at>
- * @author
+ * @author Markus Diewald <ic15b068@technikum-wien.at>
  * @author
  * 
  * @date 2016/02/22

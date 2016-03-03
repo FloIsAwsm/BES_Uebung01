@@ -4,7 +4,7 @@
  * Beispiel 1
  * 
  * @author Florian Froestl <florian.froestl@technikum-wien.at>
- * @author
+ * @author Markus Diewald <ic15b068@technikum-wien.at>
  * @author
  * 
  * @date 2016/02/22
@@ -113,11 +113,11 @@ int do_ls(char * path, char * param);
 int do_name(char * path, char * name);
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief checks a file if the owner of it equals the entered user
+ * @details function checks the file if the entered user equals the owner of the file
  * 
- * @param path [description]
- * @param user [description]
+ * @param path path including filename which needs to be checked
+ * @param user username or UID
  * 
  * @return [description]
  */
@@ -149,13 +149,13 @@ int do_user(char * path, char * param)
 }
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief checks a file if it has a valid owner
+ * @details function checks the file if it has a valid owner
  * 
- * @param path [description]
- * @param pattern [description]
+ * @param path path including filename which needs to be checked
+ * @param param always NULL
  * 
- * @return [description]
+ * @return returns EXIT_SUCCESS, if the file has no valid owner, EXIT_FAILURE otherwise
  */
 int do_nouser(char * path, char * param /* = NULL */)
 {
@@ -319,13 +319,11 @@ int parseParams(char ** params)
 			m_Parameters[index].func = &do_user;
 			m_Parameters[index].param = *(params+1);
 			params++;
-			containsPrint = false;	
 		}
 		else if(strcmp((*params), command_nouser) == 0)
 		{
 			m_Parameters[index].func = &do_nouser;
 			m_Parameters[index].param = NULL;
-			containsPrint = false;	
 		}
 		else
 		{
