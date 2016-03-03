@@ -298,7 +298,7 @@ int parseParams(char ** params)
 		{
 			m_Parameters[index].func = &do_type;
 			params++;
-			if(params != NULL)
+			if(params != NULL && *params != NULL)
 			{
 				if (strlen((*params)) != 1)
 				{
@@ -310,6 +310,7 @@ int parseParams(char ** params)
 					printf("%s: unknown argument to -type: %s", app_name, *params);
 					return EXIT_FAILURE;
 				}
+				m_Parameters[index].param = *params;
 			}
 			else
 			{
@@ -381,7 +382,6 @@ int do_ls(char * path, char * param)
 	return EXIT_SUCCESS;
 }
 
-// @todo find segmentation fault
 int do_type(char * path, char * param)
 {
 	struct stat mstat;
