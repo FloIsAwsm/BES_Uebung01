@@ -254,10 +254,17 @@ int do_dir(char * dir, char ** params)
 	static bool firstEntry = true;
 	if (firstEntry)
 	{
+		struct stat mstat;
+		if(stat(dir, &mstat) != 0)
+		{
+			printf("%s: '%s': %s\n", app_name, dir, strerror(errno));
+			return EXIT_FAILURE;
+		}
 		if(parseParams(params) == EXIT_FAILURE)
 		{
 			return EXIT_FAILURE;
 		}
+		firstEntry = false;
 	}
 
 	handleParams(dir);
