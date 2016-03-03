@@ -121,7 +121,7 @@ int do_name(char * path, char * name);
  * 
  * @return [description]
  */
-int do_user(char * path, char * user)
+int do_user(char * path, char * param)
 {
 	struct stat buf;
 	long int uid;
@@ -135,19 +135,11 @@ int do_user(char * path, char * user)
 		return EXIT_FAILURE;
 	}
 	item_uid = buf.st_uid;
-	get_uid = getpwnam(user);
-	if(get_uid == NULL) /* Kein User mit eingegebenem Usernamen */
-	{
-		uid = strtol(user,&pEnd,10);
-		/*get_uid = getpwuid(uid);
-		
-		if(get_uid==NULL)
-			return EXIT_FAILURE; 	/* Auch kein User mit eingegebener UID */
-		/*else
-			uid = get_uid->pw_uid;*/
-	}
+	get_uid = getpwnam(param);
+	if(get_uid == NULL) /* no existing user with entered username */
+		uid = strtol(param,&pEnd,10); /* parameter is an UID */
 	else
-		uid = get_uid->pw_uid;	/* Eingegebner Parameter war ein Username */
+		uid = get_uid->pw_uid;	/* parameter is a username */
 
 
 	if(item_uid == uid)
@@ -229,47 +221,52 @@ bool IsValidPath(char * param)
 	return true;
 }
 
-int do_dir(char * dir, char ** params)
-{
-	static bool firstEntry = true;
-	if (firstEntry)
-	{
-		if(parseParams(params) == EXIT_FAILURE)
-		{
-			return EXIT_FAILURE;
-		}
-	}
+int do_dir(char * dir, char ** params) 
+{ 
+	DIR * pdir;		 
+ 	struct dirent * item; 
+ 	 
+ 	static bool firstEntry = true; 
+ 	if (firstEntry) 
+ 	{ 
+ 		if(parseParams(params) == EXIT_FAILURE) 
+ 		{ 
+ 			return EXIT_FAILURE; 
+ 		} 
+ 	} 
+ 
+ 
+ 	handleParams(dir); 
+ 
+ 
+ 	if(!(pdir = opendir(dir))) 
+ 	{ 
+ 		/* cannot open dir */ 
+ 		return EXIT_FAILURE; 
+ 	} 
+ 
+ 	while ((item = readdir(pdir))) 
+ 	{ 
+ 		char path[PATH_MAX]; 
+ 		int len = snprintf(path, sizeof(path)-1, "%s/%s", dir, item->d_name); 
+ 		path[len] = 0; 
+ 		if(item->d_type == DT_DIR) 
+ 		{ 
+ 			if (!(strcmp(item->d_name, currentDir) == 0 || strcmp(item->d_name, upperDir) == 0)) 
+ 			{ 
+ 				//handleParams(path); 
+ 				do_dir(path, params); /* what if we return with EXIT_FAILURE */ 
+ 			} 
+ 		} 
+ 		else 
+ 		{ 
+ 			//do_file(path, params); 
+ 		} 
+ 	} 
+ 	closedir(pdir); 
+ 	return EXIT_SUCCESS; 
+} 
 
-	DIR * pdir;
-	struct dirent * item;
-
-	if(!(pdir = opendir(dir)))
-	{
-		// cannot open dir
-		return EXIT_FAILURE;
-	}
-
-	while ((item = readdir(pdir)))
-	{
-		char path[PATH_MAX];
-		int len = snprintf(path, sizeof(path)-1, "%s/%s", dir, item->d_name);
-		path[len] = 0;
-		if(item->d_type == DT_DIR)
-		{
-			if (!(strcmp(item->d_name, currentDir) == 0 || strcmp(item->d_name, upperDir) == 0))
-			{
-				handleParams(path);
-				do_dir(path, params); // what if we return with EXIT_FAILURE
-			}
-		}
-		else
-		{
-			do_file(path, params);
-		}
-	}
-	closedir(pdir);
-	return EXIT_SUCCESS;
-}
 
 int do_file(char * file, char ** params)
 {
