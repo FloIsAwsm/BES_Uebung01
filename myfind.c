@@ -284,3 +284,13 @@ int do_print(char * path, char * param)
 	printf("%s\n", path);
 	return EXIT_SUCCESS;
 }
+
+int do_ls(char * path, char * param)
+{
+	return EXIT_FAILURE;
+}
+
+int do_type(char * path, char * param)
+{
+	return EXIT_FAILURE;
+}
