@@ -17,6 +17,11 @@
  * @todo use const values in function declarations if possible
  */
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <pwd.h>
+#include <grp.h>
 #include "myfind.h"
 
 /* Constants */
@@ -297,11 +302,11 @@ int parseParams(char ** params)
 			params++;
 			if(params != NULL)
 			{
-				if (strlen(params) != 1)
+				if (strlen(*params) != 1)
 				{
 					// @todo parameter must only be one character exception
 				}
-				if (get_type(params) == 0)
+				if (get_type(*params) == 0)
 				{
 					printf("%s: unknown argument to -type: %s", app_name, *params);
 				}
