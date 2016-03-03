@@ -156,10 +156,22 @@ int do_name(char *path, char *pattern);
 int do_name(char *path, char *pattern)
 {
 	int flags = 0;
+	char buffer[PATH_MAX+1];
+	char * temp;
 	
-	/*printf("pattern: %s path: %s\n", pattern, path);*/
+	if(pattern[0] != '*')
+	{
+		int len = snprintf(buffer, sizeof(buffer)-1, "%s%s", "*", pattern);
+		
+		buffer[len] = 0;
+		temp = buffer;
+	}
+	else
+	{
+		temp = pattern;
+	}
 	
-	if (fnmatch(pattern, path, flags) == 0)    
+	if (fnmatch(temp, path, flags) == 0)    
 	{
 		return EXIT_SUCCESS;
     }
@@ -248,7 +260,7 @@ int do_dir(char * dir, char ** params)
 		}
 	}
 
-	
+	handleParams(dir);
 
 	if(!(pdir = opendir(dir)))
 	{
@@ -265,13 +277,13 @@ int do_dir(char * dir, char ** params)
 		{
 			if (!(strcmp(item->d_name, currentDir) == 0 || strcmp(item->d_name, upperDir) == 0))
 			{
-				handleParams(path);
+				//handleParams(path);
 				do_dir(path, params); /* what if we return with EXIT_FAILURE */
 			}
 		}
 		else
 		{
-			do_file(path, params);
+			//do_file(path, params);
 		}
 	}
 	closedir(pdir);
@@ -342,7 +354,14 @@ int parseParams(char ** params)
 		else
 		{
 			/* print error message */
-			printf("%s%s\n", err_msg_unknown_pred, (*params));
+			if((*params)[0] == '-')
+			{
+				printf("%s%s\n", err_msg_unknown_pred, (*params));
+			}
+			else
+			{
+				printf("paths must exceed the exp...");
+			}
 			return EXIT_FAILURE;
 		}
 		index++;
