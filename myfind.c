@@ -288,32 +288,33 @@ int parseParams(char ** params)
 			m_Parameters[index].param = NULL;
 			containsPrint = true;
 		}
-		/*
 		else if(strcmp((*params), command_ls) == 0)
 		{
 			m_Parameters[index].func = &do_ls;
 			m_Parameters[index].param = NULL;
 			containsPrint = true;	
 		}
-		*/
 		else if(strcmp((*params), command_type) == 0)
 		{
 			m_Parameters[index].func = &do_type;
 			params++;
 			if(params != NULL)
 			{
-				if (strlen(*params) != 1)
+				if (strlen((*params)) != 1)
 				{
 					// @todo parameter must only be one character exception
+					return EXIT_FAILURE;
 				}
 				if (get_type(*params) == 0)
 				{
 					printf("%s: unknown argument to -type: %s", app_name, *params);
+					return EXIT_FAILURE;
 				}
 			}
 			else
 			{
 				// @todo missing argument error
+				return EXIT_FAILURE;
 			}
 		}
 		else
@@ -340,13 +341,14 @@ int do_print(char * path, char * param)
 
 int do_ls(char * path, char * param)
 {
+	param = param;
 	struct stat fileStat;
     if(stat(path,&fileStat) != 0)
     {
         return EXIT_FAILURE;
     }
 	
-	printf("%d    %d ", fileStat.st_ino, fileStat.st_blocks);
+	printf("%d    %d ", (int) fileStat.st_ino, (int) fileStat.st_blocks);
 	
 	printf( (S_ISDIR(fileStat.st_mode)) ? "d" : "-");
     printf( (fileStat.st_mode & S_IRUSR) ? "r" : "-");
@@ -360,31 +362,32 @@ int do_ls(char * path, char * param)
     printf( (fileStat.st_mode & S_IXOTH) ? "x" : "-");
 
     // number of links
-    printf("   %d", fileStat.st_nlink);
+    printf("   %d ", (int) fileStat.st_nlink);
 	
 	// username struct passwd *getpwuid(uid_t uid);
 	struct passwd * user = getpwuid(fileStat.st_uid);
-	printf("%s    ", user.pw_name);
+	printf("%s    ", user->pw_name);
 	
 	// groupname struct group *getgrgid(gid_t gid);
 	struct group * grp = getgrgid(fileStat.st_gid);
-	printf("%s        ", grp.gr_name);
+	printf("%s        ", grp->gr_name);
 	
 	// last modification time size_t strftime(char *s, size_t max, const char *format, const struct tm *tm);
 	// https://annuminas.technikum-wien.at/cgi-bin/yman2html?m=strftime&s=3
 	
 	// name
-	printf("%s", get_Name(path));
+	printf("%s\n", get_Name(path));
 	
 	return EXIT_SUCCESS;
 }
 
+// @todo find segmentation fault
 int do_type(char * path, char * param)
 {
 	struct stat mstat;
 	if(stat(path, &mstat) == 0)
 	{
-		if((mstat & get_type(param)) != 0)
+		if((mstat.st_mode & get_type(param)) != 0)
 		{
 			return EXIT_SUCCESS;
 		}
@@ -437,7 +440,7 @@ mode_t get_type(char * param)
 
 char * get_Name(char * path)
 {
-	char * found;
+	char * found = path;
 	char * temp = path;
 	while(temp != NULL)
 	{
