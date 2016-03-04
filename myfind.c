@@ -35,12 +35,6 @@ const char* upperDir = "..";
 const char* currentDir = ".";
 
 /**
- * @brief [brief description]
- * @details [long description]
- */
-static bool containsPrint = false;
-
-/**
  * @brief global variable for the application name
  */
 char * app_name;
@@ -85,7 +79,7 @@ typedef struct
 } sParam;
 
 /**
- * @brief [brief description]
+ * @brief currently holds up to MAX_PARAMS-2 commands
  * @details [long description]
  */
 static sParam m_Parameters [MAX_PARAMS];
@@ -176,6 +170,7 @@ bool IsValidPath(char * param)
 	return true;
 }
 
+<<<<<<< HEAD
 int do_dir(char * dir, char ** params) 
 { 
 	DIR * pdir;		 
@@ -222,6 +217,56 @@ int do_dir(char * dir, char ** params)
  	return EXIT_SUCCESS; 
 } 
 
+=======
+int do_dir(char * dir, char ** params)
+{
+	static bool firstEntry = true;
+	if (firstEntry)
+	{
+		if(parseParams(params) == EXIT_FAILURE)
+		{
+			return EXIT_FAILURE;
+		}
+	}
+
+	DIR * pdir;
+	struct dirent * item;
+
+	if(!(pdir = opendir(dir)))
+	{
+		printf("%s: %s\n", app_name, strerror(errno));
+		// cannot open dir
+		return EXIT_FAILURE;
+	}
+
+	errno = 0;
+	while ((item = readdir(pdir)))
+	{
+		char path[PATH_MAX];
+		int len = snprintf(path, sizeof(path)-1, "%s/%s", dir, item->d_name);
+		path[len] = 0;
+		if(item->d_type == DT_DIR)
+		{
+			if (!(strcmp(item->d_name, currentDir) == 0 || strcmp(item->d_name, upperDir) == 0))
+			{
+				handleParams(path);
+				do_dir(path, params); // what if we return with EXIT_FAILURE
+			}
+		}
+		else
+		{
+			do_file(path, params);
+		}
+		errno = 0;
+	}
+	if(errno != 0)
+	{
+		printf("%s: %s\n", app_name, strerror(errno));
+	}
+	closedir(pdir);
+	return EXIT_SUCCESS;
+}
+>>>>>>> master
 
 int do_file(char * file, char ** params)
 {
@@ -242,18 +287,15 @@ int handleParams(char * path)
 		}
 		index++;
 	}
-	if(!containsPrint)
-	{
-		do_print(path, NULL);
-	}
 	return EXIT_SUCCESS;
 }
 
 int parseParams(char ** params)
 {
+	bool containsPrint = false;
 	int index = 0;
 	m_Parameters[index].func = NULL;
-	while((*params) != NULL && index < (MAX_PARAMS-1))
+	while((*params) != NULL && index < (MAX_PARAMS-2))
 	{
 		if(strcmp((*params), command_print) == 0)
 		{
@@ -288,6 +330,10 @@ int parseParams(char ** params)
 		}
 		index++;
 		params++;
+	}
+	if(!containsPrint)
+	{
+		m_Parameters[index++].func = &do_print;
 	}
 	m_Parameters[index].func = NULL;
 	return EXIT_SUCCESS;

@@ -29,18 +29,15 @@ int main(int argc, char** argv)
 	{
 		return do_dir(argv[1], (argv+2));
 	}
-	else if (argv[1] != NULL)
-	{
-		return do_dir(".", (argv+1));
-	}
-	else if (argv[1] == NULL)
-	{
-		return do_dir(".", (argv+1));
-	}
 	else
 	{
+<<<<<<< HEAD
 		printf("%s: '%s': No such file or directory\n", argv[0], argv[1]);
 	} 
 
 	return 0;
+=======
+		return do_dir(".", (argv+1));
+	}
+>>>>>>> master
 }

@@ -1,2 +1,4 @@
 # BES_Uebung01
-Solution of BES_Uebung01
+Bitte NICHT(!) in den Master Branch committen...
+
+Für jedes issue gibt es einen eigenen branch in den ihr committen solltet
