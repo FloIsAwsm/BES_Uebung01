@@ -96,8 +96,6 @@ typedef struct
  */
 static sParam m_Parameters [MAX_PARAMS];
 
-
-
 /**
  * @brief [brief description]
  * @details [long description]
@@ -109,40 +107,6 @@ static sParam m_Parameters [MAX_PARAMS];
  */
 int do_ls(char *path, char *pattern);
 
-/*
-int do_ls(char *path, char *pattern)
-{
-    struct stat fileStat;
-    if(stat(path,&fileStat) < 0)
-    {
-        return EXIT_FAILURE;
-    }
-
-    printf("Information for %s\n",path);
-    printf("---------------------------\n");
-    printf("File Size: \t\t%d bytes\n", (int) fileStat.st_size);
-    printf("Number of Links: \t%d\n",fileStat.st_nlink);
-    printf("File inode: \t\t%d\n", (int) fileStat.st_ino);
-
-    printf("File Permissions: \t");
-    printf( (S_ISDIR(fileStat.st_mode)) ? "d" : "-");
-    printf( (fileStat.st_mode & S_IRUSR) ? "r" : "-");
-    printf( (fileStat.st_mode & S_IWUSR) ? "w" : "-");
-    printf( (fileStat.st_mode & S_IXUSR) ? "x" : "-");
-    printf( (fileStat.st_mode & S_IRGRP) ? "r" : "-");
-    printf( (fileStat.st_mode & S_IWGRP) ? "w" : "-");
-    printf( (fileStat.st_mode & S_IXGRP) ? "x" : "-");
-    printf( (fileStat.st_mode & S_IROTH) ? "r" : "-");
-    printf( (fileStat.st_mode & S_IWOTH) ? "w" : "-");
-    printf( (fileStat.st_mode & S_IXOTH) ? "x" : "-");
-    printf("\n\n");
-
-    printf("The file %s a symbolic link\n", (S_ISLNK(fileStat.st_mode)) ? "is" : "is not");
-
-    return EXIT_SUCCESS;
-}
-*/
-
 /**
  * @brief function which matches a given path with the pattern
  * @details match the pattern with the path
@@ -153,34 +117,6 @@ int do_ls(char *path, char *pattern)
  * @return EXIT_SUCCESS or EXIT_FAILURE
  */
 int do_name(char *path, char *pattern);
-
-int do_name(char *path, char *pattern)
-{
-	int flags = 0;
-	char buffer[PATH_MAX+1];
-	char * temp;
-	
-	if(pattern[0] != '*')
-	{
-		int len = snprintf(buffer, sizeof(buffer)-1, "%s%s", "*", pattern);
-		
-		buffer[len] = 0;
-		temp = buffer;
-	}
-	else
-	{
-		temp = pattern;
-	}
-	
-	if (fnmatch(temp, path, flags) == 0)    
-	{
-		return EXIT_SUCCESS;
-    }
-    
-    return EXIT_FAILURE;
-}
-
-
 
 /**
  * @brief [brief description]
@@ -202,7 +138,7 @@ int do_user(char * path, char * user);
  * 
  * @return [description]
  */
-int do_nouser(char * path, char * param /* = NULL */);
+int do_nouser(char * path, char * param);
 
 /**
  * @brief path with pattern matching
@@ -214,33 +150,6 @@ int do_nouser(char * path, char * param /* = NULL */);
  * @return EXIT_SUCCESS or EXIT_FAILURE
  */
 int do_path(char * path, char * pattern);
-
-int do_path(char *path, char *pattern)
-{
-	int flags = 0;
-	char buffer[PATH_MAX+1];
-	char * temp;
-	
-	if(pattern[0] != '*')
-	{
-		int len = snprintf(buffer, sizeof(buffer)-1, "%s%s", "*", pattern);
-		
-		buffer[len] = 0;
-		temp = buffer;
-	}
-	else
-	{
-		temp = pattern;
-	}
-	
-	if (fnmatch(temp, path, flags) == 0)    
-	{
-		return EXIT_SUCCESS;
-    }
-    
-    return EXIT_FAILURE;
-}
-
 
 /**
  * @brief prints the path on the console
@@ -409,4 +318,56 @@ int do_print(char * path, char * param)
 	}
 	printf("%s\n", path);
 	return EXIT_SUCCESS;
+}
+
+int do_name(char *path, char *pattern)
+{
+	int flags = 0;
+	char buffer[PATH_MAX+1];
+	char * temp;
+	
+	if(pattern[0] != '*')
+	{
+		int len = snprintf(buffer, sizeof(buffer)-1, "%s%s", "*", pattern);
+		
+		buffer[len] = 0;
+		temp = buffer;
+	}
+	else
+	{
+		temp = pattern;
+	}
+	
+	if (fnmatch(temp, path, flags) == 0)    
+	{
+		return EXIT_SUCCESS;
+    }
+    
+    return EXIT_FAILURE;
+}
+
+int do_path(char *path, char *pattern)
+{
+	int flags = 0;
+	char buffer[PATH_MAX+1];
+	char * temp;
+	
+	if(pattern[0] != '*')
+	{
+		int len = snprintf(buffer, sizeof(buffer)-1, "%s%s", "*", pattern);
+		
+		buffer[len] = 0;
+		temp = buffer;
+	}
+	else
+	{
+		temp = pattern;
+	}
+	
+	if (fnmatch(temp, path, flags) == 0)    
+	{
+		return EXIT_SUCCESS;
+    }
+    
+    return EXIT_FAILURE;
 }
