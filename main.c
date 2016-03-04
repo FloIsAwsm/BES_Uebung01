@@ -4,7 +4,7 @@
  * Beispiel 1
  * 
  * @author Florian Froestl <florian.froestl@technikum-wien.at>
- * @author
+ * @author Markus Diewald <ic15b068@technikum-wien.at>
  * @author
  * 
  * @date 2016/02/22
@@ -17,20 +17,13 @@
 #include "myfind.h"
 
 int main(int argc, char** argv)
-{
-	// first write the application name to a global variable
+{	
+	
+	/* first write the application name to a global variable */
 	app_name = argv[0];
 	char ** temp = argv;
 	/* prevent warnings regarding unused params */
 	argc = argc;
-
-	// now print the application name and the parameters
-	while(*temp != NULL)
-	{
-		printf("%s ", *temp);
-		temp++;
-	}
-	printf("\n");
 
 	if(argv[1] != NULL && IsValidPath(argv[1]))
 	{
@@ -38,6 +31,13 @@ int main(int argc, char** argv)
 	}
 	else
 	{
+<<<<<<< HEAD
+		printf("%s: '%s': No such file or directory\n", argv[0], argv[1]);
+	} 
+
+	return 0;
+=======
 		return do_dir(".", (argv+1));
 	}
+>>>>>>> master
 }

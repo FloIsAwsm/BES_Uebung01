@@ -22,8 +22,11 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include <errno.h>
-#include <limits.h> // PATH_MAX
+#include <limits.h> /* PATH_MAX */
 #include <unistd.h>
+#include <pwd.h>
+#include <sys/stat.h>
+#include <stdlib.h>
 
 /**
  * @brief global variable for the application name

@@ -4,7 +4,7 @@
  * Beispiel 1
  * 
  * @author Florian Froestl <florian.froestl@technikum-wien.at>
- * @author
+ * @author Markus Diewald <ic15b068@technikum-wien.at>
  * @author
  * 
  * @date 2016/02/22
@@ -27,6 +27,7 @@ const char * err_msg_missing_arg = "missing argument to ";
 const char * command_ls = "-ls";
 const char * command_print = "-print";
 const char * command_user = "-user";
+const char * command_nouser = "-nouser";
 const char * command_name = "-name";
 const char * command_type = "-type";
 /* directory names */
@@ -106,24 +107,24 @@ int do_ls(char * path, char * param);
 int do_name(char * path, char * name);
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief checks a file if the owner of it equals the entered user
+ * @details function checks the file if the entered user equals the owner of the file
  * 
- * @param path [description]
- * @param user [description]
+ * @param path path including filename which needs to be checked
+ * @param user username or UID
  * 
  * @return [description]
  */
-int do_user(char * path, char * user);
+int do_user(char * path, char * param);
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief checks a file if it has a valid owner
+ * @details function checks the file if it has a valid owner
  * 
- * @param path [description]
- * @param pattern [description]
+ * @param path path including filename which needs to be checked
+ * @param param always NULL
  * 
- * @return [description]
+ * @return returns EXIT_SUCCESS, if the file has no valid owner, EXIT_FAILURE otherwise
  */
 int do_nouser(char * path, char * param);
 
@@ -169,6 +170,54 @@ bool IsValidPath(char * param)
 	return true;
 }
 
+<<<<<<< HEAD
+int do_dir(char * dir, char ** params) 
+{ 
+	DIR * pdir;		 
+ 	struct dirent * item; 
+ 	 
+ 	static bool firstEntry = true; 
+ 	if (firstEntry) 
+ 	{ 
+ 		if(parseParams(params) == EXIT_FAILURE) 
+ 		{ 
+ 			return EXIT_FAILURE; 
+ 		} 
+ 	} 
+ 
+ 
+ 	handleParams(dir); 
+ 
+ 
+ 	if(!(pdir = opendir(dir))) 
+ 	{ 
+ 		/* cannot open dir */ 
+ 		return EXIT_FAILURE; 
+ 	} 
+ 
+ 	while ((item = readdir(pdir))) 
+ 	{ 
+ 		char path[PATH_MAX]; 
+ 		int len = snprintf(path, sizeof(path)-1, "%s/%s", dir, item->d_name); 
+ 		path[len] = 0; 
+ 		if(item->d_type == DT_DIR) 
+ 		{ 
+ 			if (!(strcmp(item->d_name, currentDir) == 0 || strcmp(item->d_name, upperDir) == 0)) 
+ 			{ 
+ 				//handleParams(path); 
+ 				do_dir(path, params); /* what if we return with EXIT_FAILURE */ 
+ 			} 
+ 		} 
+ 		else 
+ 		{ 
+ 			//do_file(path, params); 
+ 		} 
+ 	} 
+ 	closedir(pdir); 
+ 	return EXIT_SUCCESS; 
+} 
+
+=======
 int do_dir(char * dir, char ** params)
 {
 	static bool firstEntry = true;
@@ -217,6 +266,7 @@ int do_dir(char * dir, char ** params)
 	closedir(pdir);
 	return EXIT_SUCCESS;
 }
+>>>>>>> master
 
 int do_file(char * file, char ** params)
 {
@@ -261,6 +311,17 @@ int parseParams(char ** params)
 			containsPrint = true;	
 		}
 		*/
+		else if(strcmp((*params), command_user) == 0)
+		{
+			m_Parameters[index].func = &do_user;
+			m_Parameters[index].param = *(params+1);
+			params++;
+		}
+		else if(strcmp((*params), command_nouser) == 0)
+		{
+			m_Parameters[index].func = &do_nouser;
+			m_Parameters[index].param = NULL;
+		}
 		else
 		{
 			// print error message
@@ -285,4 +346,56 @@ int do_print(char * path, char * param)
 	}
 	printf("%s\n", path);
 	return EXIT_SUCCESS;
+}
+
+int do_user(char * path, char * param)
+{
+	struct stat buf;
+	long int uid;
+	long int item_uid;
+	struct passwd *get_uid;
+	char *pEnd;
+	
+	if(stat(path, &buf) == -1)
+	{
+		perror("stat");
+		return EXIT_FAILURE;
+	}
+	item_uid = buf.st_uid;
+	get_uid = getpwnam(param);
+	if(get_uid == NULL) /* no existing user with entered username */
+	{
+		uid = strtol(param,&pEnd,10); /* parameter is an UID */
+	}
+	else
+	{
+		uid = get_uid->pw_uid;	/* parameter is a username */
+	}
+
+	if(item_uid == uid)
+		return EXIT_SUCCESS;
+	else
+		return EXIT_FAILURE;	
+}
+
+int do_nouser(char * path, char * param)
+{
+	struct passwd *get_uid;
+	struct stat buf;
+	int item_uid;
+	int uid;
+
+	if(stat(path, &buf) == -1)
+	{
+		perror("stat");
+		return EXIT_FAILURE;
+	}
+	item_uid = buf.st_uid;
+
+	get_uid = getpwuid(item_uid);
+	if(get_uid == NULL)
+		return EXIT_SUCCESS;
+	else
+		return EXIT_FAILURE;
+	
 }
