@@ -1,17 +1,19 @@
 ##
 ## @file Makefile
-## BES Uebung## Beispiel 1##
-## @author Florian Froestl
-## @author 
-## @author 
-## @date 2016/02/23
+## Betriebssysteme Makefile
+## Beispiel 1
 ##
-## @version $Revision: 1000 $
+## @author Thomas M. Galla <galla@technikum-wien.at> (tdxxx)
+## @author Bernd Petrovitsch <bernd.petrovitsch@technikum-wien.at>
+## @date 2016/03/04
+##
+## @version $Revision: 1689 $
 ##
 ## @todo
 ##
+## URL: $HeadURL: https://svn.petrovitsch.priv.at/ICSS-BES/trunk/2015/CIS/lu/hello/Makefile $
 ##
-## Last Modified: $Author: $
+## Last Modified: $Author: tom $
 ##
 
 ##
