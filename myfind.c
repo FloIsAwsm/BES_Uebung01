@@ -121,32 +121,7 @@ int do_name(char * path, char * name);
  * 
  * @return [description]
  */
-int do_user(char * path, char * param)
-{
-	struct stat buf;
-	long int uid;
-	long int item_uid;
-	struct passwd *get_uid;
-	char *pEnd;
-	
-	if(stat(path, &buf) == -1)
-	{
-		perror("stat");
-		return EXIT_FAILURE;
-	}
-	item_uid = buf.st_uid;
-	get_uid = getpwnam(param);
-	if(get_uid == NULL) /* no existing user with entered username */
-		uid = strtol(param,&pEnd,10); /* parameter is an UID */
-	else
-		uid = get_uid->pw_uid;	/* parameter is a username */
-
-
-	if(item_uid == uid)
-		return EXIT_SUCCESS;
-	else
-		return EXIT_FAILURE;	
-}
+int do_user(char * path, char * param);
 
 /**
  * @brief checks a file if it has a valid owner
@@ -157,27 +132,7 @@ int do_user(char * path, char * param)
  * 
  * @return returns EXIT_SUCCESS, if the file has no valid owner, EXIT_FAILURE otherwise
  */
-int do_nouser(char * path, char * param /* = NULL */)
-{
-	struct passwd *get_uid;
-	struct stat buf;
-	int item_uid;
-	int uid;
-
-	if(stat(path, &buf) == -1)
-	{
-		perror("stat");
-		return EXIT_FAILURE;
-	}
-	item_uid = buf.st_uid;
-
-	get_uid = getpwuid(item_uid);
-	if(get_uid == NULL)
-		return EXIT_SUCCESS;
-	else
-		return EXIT_FAILURE;
-	
-}
+int do_nouser(char * path, char * param);
 
 /**
  * @brief [brief description]
@@ -345,4 +300,56 @@ int do_print(char * path, char * param)
 	}
 	printf("%s\n", path);
 	return EXIT_SUCCESS;
+}
+
+int do_user(char * path, char * param)
+{
+	struct stat buf;
+	long int uid;
+	long int item_uid;
+	struct passwd *get_uid;
+	char *pEnd;
+	
+	if(stat(path, &buf) == -1)
+	{
+		perror("stat");
+		return EXIT_FAILURE;
+	}
+	item_uid = buf.st_uid;
+	get_uid = getpwnam(param);
+	if(get_uid == NULL) /* no existing user with entered username */
+	{
+		uid = strtol(param,&pEnd,10); /* parameter is an UID */
+	}
+	else
+	{
+		uid = get_uid->pw_uid;	/* parameter is a username */
+	}
+
+	if(item_uid == uid)
+		return EXIT_SUCCESS;
+	else
+		return EXIT_FAILURE;	
+}
+
+int do_nouser(char * path, char * param)
+{
+	struct passwd *get_uid;
+	struct stat buf;
+	int item_uid;
+	int uid;
+
+	if(stat(path, &buf) == -1)
+	{
+		perror("stat");
+		return EXIT_FAILURE;
+	}
+	item_uid = buf.st_uid;
+
+	get_uid = getpwuid(item_uid);
+	if(get_uid == NULL)
+		return EXIT_SUCCESS;
+	else
+		return EXIT_FAILURE;
+	
 }
