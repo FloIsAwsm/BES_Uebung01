@@ -1,11 +1,11 @@
 ##
 ## @file Makefile
-## Betriebssysteme Hello Makefile
-## Beispiel 0
+## Betriebssysteme Makefile
+## Beispiel 1
 ##
 ## @author Thomas M. Galla <galla@technikum-wien.at> (tdxxx)
 ## @author Bernd Petrovitsch <bernd.petrovitsch@technikum-wien.at>
-## @date 2005/02/22
+## @date 2016/03/04
 ##
 ## @version $Revision: 1689 $
 ##

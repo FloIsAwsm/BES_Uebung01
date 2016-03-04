@@ -4,8 +4,8 @@
  * Beispiel 1
  * 
  * @author Florian Froestl <florian.froestl@technikum-wien.at>
- * @author
- * @author
+ * @author David Boisits <david.boisits@technikum-wien.at>
+ * @author Markus Diewald <markus.diewald@technikum-wien.at>
  * 
  * @date 2016/02/22
  * 

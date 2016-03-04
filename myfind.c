@@ -35,6 +35,7 @@ const char * command_print = "-print";
 const char * command_user = "-user";
 const char * command_name = "-name";
 const char * command_type = "-type";
+const char * command_path = "-path";
 /* directory names */
 const char* upperDir = "..";
 const char* currentDir = ".";
@@ -143,13 +144,13 @@ int do_ls(char *path, char *pattern)
 */
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief function which matches a given path with the pattern
+ * @details match the pattern with the path
  * 
- * @param path [description]
- * @param name [description]
+ * @param path directory path
+ * @param pattern to search for
  * 
- * @return [description]
+ * @return EXIT_SUCCESS or EXIT_FAILURE
  */
 int do_name(char *path, char *pattern);
 
@@ -204,15 +205,41 @@ int do_user(char * path, char * user);
 int do_nouser(char * path, char * param /* = NULL */);
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief path with pattern matching
+ * @details funtion to check if given pattern is in path and return complete path
  * 
- * @param path [description]
- * @param pattern [description]
+ * @param path to search for
+ * @param pattern to matched with the given path
  * 
- * @return [description]
+ * @return EXIT_SUCCESS or EXIT_FAILURE
  */
 int do_path(char * path, char * pattern);
+
+int do_path(char *path, char *pattern)
+{
+	int flags = 0;
+	char buffer[PATH_MAX+1];
+	char * temp;
+	
+	if(pattern[0] != '*')
+	{
+		int len = snprintf(buffer, sizeof(buffer)-1, "%s%s", "*", pattern);
+		
+		buffer[len] = 0;
+		temp = buffer;
+	}
+	else
+	{
+		temp = pattern;
+	}
+	
+	if (fnmatch(temp, path, flags) == 0)    
+	{
+		return EXIT_SUCCESS;
+    }
+    
+    return EXIT_FAILURE;
+}
 
 
 /**
@@ -290,7 +317,7 @@ int do_dir(char * dir, char ** params)
 		}
 		else
 		{
-			//do_file(path, params);
+			do_file(path, params);
 		}
 	}
 	closedir(pdir);
@@ -335,15 +362,12 @@ int parseParams(char ** params)
 			m_Parameters[index].param = NULL;
 			containsPrint = true;
 		}
-		/*
-		else if(strcmp((*params), command_ls) == 0)
+		else if(strcmp((*params), command_path) == 0)
 		{
-			m_Parameters[index].func = &do_ls;
-			m_Parameters[index].param = NULL;
-			containsPrint = true;	
-		}
-		*/
-		
+			m_Parameters[index].func = &do_path;
+			m_Parameters[index].param = *(params+1);;
+			params++;
+		}		
 		else if(strcmp((*params), command_name) == 0)
 		{
 			m_Parameters[index].func = &do_name;
