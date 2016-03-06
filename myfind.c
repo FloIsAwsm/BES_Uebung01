@@ -17,6 +17,11 @@
  * @todo use const values in function declarations if possible
  */
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <pwd.h>
+#include <grp.h>
 #include "myfind.h"
 
 /* Constants */
@@ -32,6 +37,16 @@ const char * command_type = "-type";
 /* directory names */
 const char* upperDir = "..";
 const char* currentDir = ".";
+
+/* type names */
+const char * type_dir = "d";
+const char * type_block = "b";
+const char * type_character = "c";
+const char * type_pipe = "p";
+const char * type_file = "f";
+const char * type_link = "l";
+const char * type_socket = "s";
+//const char * type_Door = "D";
 
 /**
  * @brief global variable for the application name
@@ -160,6 +175,24 @@ int do_print(char * path, char * param);
  */
 int do_type(char * path, char * type);
 
+/**
+ * @brief [brief description]
+ * @details [long description]
+ * 
+ * @param param [description]
+ * @return [description]
+ */
+mode_t get_type(char * param);
+
+/**
+ * @brief [brief description]
+ * @details [long description]
+ * 
+ * @param path [description]
+ * @return [description]
+ */
+char * get_Name(char * path);
+
 bool IsValidPath(char * param)
 {
 	if(param[0] == '-')
@@ -253,14 +286,36 @@ int parseParams(char ** params)
 			m_Parameters[index].param = NULL;
 			containsPrint = true;
 		}
-		/*
 		else if(strcmp((*params), command_ls) == 0)
 		{
 			m_Parameters[index].func = &do_ls;
 			m_Parameters[index].param = NULL;
 			containsPrint = true;	
 		}
-		*/
+		else if(strcmp((*params), command_type) == 0)
+		{
+			m_Parameters[index].func = &do_type;
+			params++;
+			if(params != NULL && *params != NULL)
+			{
+				if (strlen((*params)) != 1)
+				{
+					// @todo parameter must only be one character exception
+					return EXIT_FAILURE;
+				}
+				if (get_type(*params) == 0)
+				{
+					printf("%s: unknown argument to -type: %s", app_name, *params);
+					return EXIT_FAILURE;
+				}
+				m_Parameters[index].param = *params;
+			}
+			else
+			{
+				// @todo missing argument error
+				return EXIT_FAILURE;
+			}
+		}
 		else
 		{
 			// print error message
@@ -285,4 +340,151 @@ int do_print(char * path, char * param)
 	}
 	printf("%s\n", path);
 	return EXIT_SUCCESS;
+}
+
+int do_ls(char * path, char * param)
+{
+	param = param;
+	struct stat fileStat;
+	char linkPath[PATH_MAX];
+	const int timeString_size = 14;
+	char timeString[timeString_size]; //Aug  4  14:55\0
+	int retVal = 0;
+
+    if(stat(path,&fileStat) != 0)
+    {
+        return EXIT_FAILURE;
+    }
+	
+	printf("%d %d ", (int) fileStat.st_ino, (int) fileStat.st_blocks);
+	
+	printf( (S_ISDIR(fileStat.st_mode)) ? "d" : "-");
+    printf( (fileStat.st_mode & S_IRUSR) ? "r" : "-");
+    printf( (fileStat.st_mode & S_IWUSR) ? "w" : "-");
+    printf( (fileStat.st_mode & S_IXUSR) ? "x" : "-");
+    printf( (fileStat.st_mode & S_IRGRP) ? "r" : "-");
+    printf( (fileStat.st_mode & S_IWGRP) ? "w" : "-");
+    printf( (fileStat.st_mode & S_IXGRP) ? "x" : "-");
+    printf( (fileStat.st_mode & S_IROTH) ? "r" : "-");
+    printf( (fileStat.st_mode & S_IWOTH) ? "w" : "-");
+    printf( (fileStat.st_mode & S_IXOTH) ? "x" : "-");
+
+    // number of links
+    printf(" %d ", (int) fileStat.st_nlink);
+	
+	// username struct passwd *getpwuid(uid_t uid);
+	struct passwd * user = getpwuid(fileStat.st_uid);
+	printf("%s ", user->pw_name);
+	
+	// groupname struct group *getgrgid(gid_t gid);
+	struct group * grp = getgrgid(fileStat.st_gid);
+	printf("%s ", grp->gr_name);
+
+	// size in bytes
+	printf("%d ", (int) fileStat.st_size);
+	
+	// last modification time size_t strftime(char *s, size_t max, const char *format, const struct tm *tm);
+	// https://annuminas.technikum-wien.at/cgi-bin/yman2html?m=strftime&s=3
+	// time_t st_mtime
+	struct tm * modTime;
+
+	modTime = localtime(&fileStat.st_mtime);
+	
+	if(modTime != NULL)
+	{
+		retVal = strftime(timeString, timeString_size-1, "%b %d %H:%M", modTime);
+		if(retVal == 0)
+		{
+			return EXIT_FAILURE;
+		}
+		timeString[retVal] = '\0'; // better safe than sorry...
+		printf("%s ", timeString);
+	}
+
+	// -> softlink
+	errno = 0;
+		
+	retVal = readlink(path, linkPath, PATH_MAX-1);
+	if (retVal < 0)
+	{
+		printf("\n%s\n", strerror(errno));
+		return EXIT_FAILURE;
+	}
+	// add terminating 0 , because readlink doesn't do it :(
+	linkPath[retVal] = '\0';
+	printf("%s", get_Name(path));
+	printf(" -> %s\n", linkPath);
+	
+	return EXIT_SUCCESS;
+}
+
+int do_type(char * path, char * param)
+{
+	struct stat mstat;
+	if(stat(path, &mstat) == 0)
+	{
+		if((mstat.st_mode & get_type(param)) != 0)
+		{
+			return EXIT_SUCCESS;
+		}
+	}
+	
+	return EXIT_FAILURE;
+}
+
+mode_t get_type(char * param)
+{
+	if (strcmp(param, type_dir) == 0)
+	{
+		return S_IFDIR;
+	}
+	else if(strcmp(param, type_block) == 0)
+	{
+		return S_IFBLK;
+	}
+	else if(strcmp(param, type_character) == 0)
+	{
+		return S_IFCHR;
+	}
+	else if(strcmp(param, type_pipe) == 0)
+	{
+		return S_IFIFO;
+	}
+	else if(strcmp(param, type_file) == 0)
+	{
+		return S_IFMT;
+	}
+	else if(strcmp(param, type_link) == 0)
+	{
+		return S_IFLNK;
+	}
+	else if(strcmp(param, type_socket) == 0)
+	{
+		return S_IFSOCK;
+	}
+	/*
+	else if(strcmp(param, type_Door) == 0)
+	{
+		return 0;
+	}
+	*/
+	else
+	{
+		return 0;
+	}
+}
+
+char * get_Name(char * path)
+{
+	char * found = path;
+	char * temp = path;
+	while(temp != NULL)
+	{
+		if (*temp == '/')
+		{
+			found = temp;
+		}
+		temp++;
+	}
+	return found+1;
 }
