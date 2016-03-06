@@ -3,9 +3,9 @@
  * 
  * Beispiel 1
  * 
- * @author Florian Froestl <florian.froestl@technikum-wien.at>
- * @author
- * @author
+ * @author Florian Froestl 	<florian.froestl@technikum-wien.at>
+ * @author David Boisits	<david.boisits@technikum-wien.at>
+ * @author Markus Diewald	<markus.diewald@technikum-wien.at>
  * 
  * @date 2016/02/22
  * 
@@ -22,8 +22,16 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include <errno.h>
-#include <limits.h> // PATH_MAX
+#include <limits.h> /* PATH_MAX */
 #include <unistd.h>
+<<<<<<< HEAD
+#include <pwd.h>
+#include <sys/stat.h>
+#include <stdlib.h>
+=======
+#include <fnmatch.h>
+#include <sys/stat.h>
+>>>>>>> 677b5f897b4c7979cb110f02cbc2c6568c29a190
 
 /**
  * @brief global variable for the application name

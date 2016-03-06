@@ -4,8 +4,13 @@
  * Beispiel 1
  * 
  * @author Florian Froestl <florian.froestl@technikum-wien.at>
+<<<<<<< HEAD
+ * @author Markus Diewald <ic15b068@technikum-wien.at>
  * @author
- * @author
+=======
+ * @author David Boisits <david.boisits@technikum-wien.at>
+ * @author Markus Diewald <markus.diewald@technikum-wien.at>
+>>>>>>> 677b5f897b4c7979cb110f02cbc2c6568c29a190
  * 
  * @date 2016/02/22
  * 
@@ -22,7 +27,14 @@
 #include <unistd.h>
 #include <pwd.h>
 #include <grp.h>
+#include <time.h>
 #include "myfind.h"
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <stdio.h>
+#include <fnmatch.h>
 
 /* Constants */
 /* Error messages */
@@ -32,8 +44,10 @@ const char * err_msg_missing_arg = "missing argument to ";
 const char * command_ls = "-ls";
 const char * command_print = "-print";
 const char * command_user = "-user";
+const char * command_nouser = "-nouser";
 const char * command_name = "-name";
 const char * command_type = "-type";
+const char * command_path = "-path";
 /* directory names */
 const char* upperDir = "..";
 const char* currentDir = ".";
@@ -47,6 +61,12 @@ const char * type_file = "f";
 const char * type_link = "l";
 const char * type_socket = "s";
 //const char * type_Door = "D";
+
+/**
+ * @brief [brief description]
+ * @details [long description]
+ */
+static bool containsPrint = false;
 
 /**
  * @brief global variable for the application name
@@ -93,7 +113,7 @@ typedef struct
 } sParam;
 
 /**
- * @brief currently holds up to MAX_PARAMS-2 commands
+ * @brief [brief description]
  * @details [long description]
  */
 static sParam m_Parameters [MAX_PARAMS];
@@ -107,49 +127,49 @@ static sParam m_Parameters [MAX_PARAMS];
  * 
  * @return [description]
  */
-int do_ls(char * path, char * param);
+int do_ls(char *path, char *pattern);
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief function which matches a given path with the pattern
+ * @details match the pattern with the path
  * 
- * @param path [description]
- * @param name [description]
+ * @param path directory path
+ * @param pattern to search for
+ * 
+ * @return EXIT_SUCCESS or EXIT_FAILURE
+ */
+int do_name(char *path, char *pattern);
+
+/**
+ * @brief checks a file if the owner of it equals the entered user
+ * @details function checks the file if the entered user equals the owner of the file
+ * 
+ * @param path path including filename which needs to be checked
+ * @param user username or UID
  * 
  * @return [description]
  */
-int do_name(char * path, char * name);
+int do_user(char * path, char * param);
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief checks a file if it has a valid owner
+ * @details function checks the file if it has a valid owner
  * 
- * @param path [description]
- * @param user [description]
+ * @param path path including filename which needs to be checked
+ * @param param always NULL
  * 
- * @return [description]
- */
-int do_user(char * path, char * user);
-
-/**
- * @brief [brief description]
- * @details [long description]
- * 
- * @param path [description]
- * @param pattern [description]
- * 
- * @return [description]
+ * @return returns EXIT_SUCCESS, if the file has no valid owner, EXIT_FAILURE otherwise
  */
 int do_nouser(char * path, char * param);
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief path with pattern matching
+ * @details funtion to check if given pattern is in path and return complete path
  * 
- * @param path [description]
- * @param pattern [description]
+ * @param path to search for
+ * @param pattern to matched with the given path
  * 
- * @return [description]
+ * @return EXIT_SUCCESS or EXIT_FAILURE
  */
 int do_path(char * path, char * pattern);
 
@@ -202,28 +222,83 @@ bool IsValidPath(char * param)
 	return true;
 }
 
+<<<<<<< HEAD
+int do_dir(char * dir, char ** params) 
+{ 
+	DIR * pdir;		 
+ 	struct dirent * item; 
+ 	 
+ 	static bool firstEntry = true; 
+ 	if (firstEntry) 
+ 	{ 
+ 		if(parseParams(params) == EXIT_FAILURE) 
+ 		{ 
+ 			return EXIT_FAILURE; 
+ 		} 
+ 	} 
+ 
+ 
+ 	handleParams(dir); 
+ 
+ 
+ 	if(!(pdir = opendir(dir))) 
+ 	{ 
+ 		/* cannot open dir */ 
+ 		return EXIT_FAILURE; 
+ 	} 
+ 
+ 	while ((item = readdir(pdir))) 
+ 	{ 
+ 		char path[PATH_MAX]; 
+ 		int len = snprintf(path, sizeof(path)-1, "%s/%s", dir, item->d_name); 
+ 		path[len] = 0; 
+ 		if(item->d_type == DT_DIR) 
+ 		{ 
+ 			if (!(strcmp(item->d_name, currentDir) == 0 || strcmp(item->d_name, upperDir) == 0)) 
+ 			{ 
+ 				//handleParams(path); 
+ 				do_dir(path, params); /* what if we return with EXIT_FAILURE */ 
+ 			} 
+ 		} 
+ 		else 
+ 		{ 
+ 			//do_file(path, params); 
+ 		} 
+ 	} 
+ 	closedir(pdir); 
+ 	return EXIT_SUCCESS; 
+} 
+
+=======
 int do_dir(char * dir, char ** params)
 {
+	DIR * pdir;		
+	struct dirent * item;
+	
 	static bool firstEntry = true;
 	if (firstEntry)
 	{
+		struct stat mstat;
+		if(stat(dir, &mstat) != 0)
+		{
+			printf("%s: '%s': %s\n", app_name, dir, strerror(errno));
+			return EXIT_FAILURE;
+		}
 		if(parseParams(params) == EXIT_FAILURE)
 		{
 			return EXIT_FAILURE;
 		}
+		firstEntry = false;
 	}
 
-	DIR * pdir;
-	struct dirent * item;
+	handleParams(dir);
 
 	if(!(pdir = opendir(dir)))
 	{
-		printf("%s: %s\n", app_name, strerror(errno));
-		// cannot open dir
+		/* cannot open dir */
 		return EXIT_FAILURE;
 	}
 
-	errno = 0;
 	while ((item = readdir(pdir)))
 	{
 		char path[PATH_MAX];
@@ -233,23 +308,19 @@ int do_dir(char * dir, char ** params)
 		{
 			if (!(strcmp(item->d_name, currentDir) == 0 || strcmp(item->d_name, upperDir) == 0))
 			{
-				handleParams(path);
-				do_dir(path, params); // what if we return with EXIT_FAILURE
+				//handleParams(path);
+				do_dir(path, params); /* what if we return with EXIT_FAILURE */
 			}
 		}
 		else
 		{
 			do_file(path, params);
 		}
-		errno = 0;
-	}
-	if(errno != 0)
-	{
-		printf("%s: %s\n", app_name, strerror(errno));
 	}
 	closedir(pdir);
 	return EXIT_SUCCESS;
 }
+>>>>>>> master
 
 int do_file(char * file, char ** params)
 {
@@ -270,15 +341,18 @@ int handleParams(char * path)
 		}
 		index++;
 	}
+	if(!containsPrint)
+	{
+		do_print(path, NULL);
+	}
 	return EXIT_SUCCESS;
 }
 
 int parseParams(char ** params)
 {
-	bool containsPrint = false;
 	int index = 0;
 	m_Parameters[index].func = NULL;
-	while((*params) != NULL && index < (MAX_PARAMS-2))
+	while((*params) != NULL && index < (MAX_PARAMS-1))
 	{
 		if(strcmp((*params), command_print) == 0)
 		{
@@ -286,12 +360,41 @@ int parseParams(char ** params)
 			m_Parameters[index].param = NULL;
 			containsPrint = true;
 		}
+<<<<<<< HEAD
+		else if(strcmp((*params), command_path) == 0)
+		{
+			m_Parameters[index].func = &do_path;
+			m_Parameters[index].param = *(params+1);;
+			params++;
+		}		
+		else if(strcmp((*params), command_name) == 0)
+		{
+			m_Parameters[index].func = &do_name;
+			m_Parameters[index].param = *(params+1);
+			params++;
+		}
+		/*
+=======
+>>>>>>> iss05
 		else if(strcmp((*params), command_ls) == 0)
 		{
 			m_Parameters[index].func = &do_ls;
 			m_Parameters[index].param = NULL;
 			containsPrint = true;	
 		}
+<<<<<<< HEAD
+		*/
+		else if(strcmp((*params), command_user) == 0)
+		{
+			m_Parameters[index].func = &do_user;
+			m_Parameters[index].param = *(params+1);
+			params++;
+		}
+		else if(strcmp((*params), command_nouser) == 0)
+		{
+			m_Parameters[index].func = &do_nouser;
+			m_Parameters[index].param = NULL;
+=======
 		else if(strcmp((*params), command_type) == 0)
 		{
 			m_Parameters[index].func = &do_type;
@@ -315,19 +418,23 @@ int parseParams(char ** params)
 				// @todo missing argument error
 				return EXIT_FAILURE;
 			}
+>>>>>>> iss05
 		}
 		else
 		{
-			// print error message
-			printf("%s%s\n", err_msg_unknown_pred, (*params));
+			/* print error message */
+			if((*params)[0] == '-')
+			{
+				printf("%s%s\n", err_msg_unknown_pred, (*params));
+			}
+			else
+			{
+				printf("paths must exceed the exp...");
+			}
 			return EXIT_FAILURE;
 		}
 		index++;
 		params++;
-	}
-	if(!containsPrint)
-	{
-		m_Parameters[index++].func = &do_print;
 	}
 	m_Parameters[index].func = NULL;
 	return EXIT_SUCCESS;
@@ -342,6 +449,113 @@ int do_print(char * path, char * param)
 	return EXIT_SUCCESS;
 }
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+int do_user(char * path, char * param)
+{
+	struct stat buf;
+	long int uid;
+	long int item_uid;
+	struct passwd *get_uid;
+	char *pEnd;
+	
+	if(stat(path, &buf) == -1)
+	{
+		perror("stat");
+		return EXIT_FAILURE;
+	}
+	item_uid = buf.st_uid;
+	get_uid = getpwnam(param);
+	if(get_uid == NULL) /* no existing user with entered username */
+	{
+		uid = strtol(param,&pEnd,10); /* parameter is an UID */
+	}
+	else
+	{
+		uid = get_uid->pw_uid;	/* parameter is a username */
+	}
+
+	if(item_uid == uid)
+		return EXIT_SUCCESS;
+	else
+		return EXIT_FAILURE;	
+}
+
+int do_nouser(char * path, char * param)
+{
+	struct passwd *get_uid;
+	struct stat buf;
+	int item_uid;
+	int uid;
+
+	if(stat(path, &buf) == -1)
+	{
+		perror("stat");
+		return EXIT_FAILURE;
+	}
+	item_uid = buf.st_uid;
+
+	get_uid = getpwuid(item_uid);
+	if(get_uid == NULL)
+		return EXIT_SUCCESS;
+	else
+		return EXIT_FAILURE;
+	
+}
+=======
+int do_name(char *path, char *pattern)
+{
+	int flags = 0;
+	char buffer[PATH_MAX+1];
+	char * temp;
+	
+	if(pattern[0] != '*')
+	{
+		int len = snprintf(buffer, sizeof(buffer)-1, "%s%s", "*", pattern);
+		
+		buffer[len] = 0;
+		temp = buffer;
+	}
+	else
+	{
+		temp = pattern;
+	}
+	
+	if (fnmatch(temp, path, flags) == 0)    
+	{
+		return EXIT_SUCCESS;
+    }
+    
+    return EXIT_FAILURE;
+}
+
+int do_path(char *path, char *pattern)
+{
+	int flags = 0;
+	char buffer[PATH_MAX+1];
+	char * temp;
+	
+	if(pattern[0] != '*')
+	{
+		int len = snprintf(buffer, sizeof(buffer)-1, "%s%s", "*", pattern);
+		
+		buffer[len] = 0;
+		temp = buffer;
+	}
+	else
+	{
+		temp = pattern;
+	}
+	
+	if (fnmatch(temp, path, flags) == 0)    
+	{
+		return EXIT_SUCCESS;
+    }
+    
+    return EXIT_FAILURE;
+}
+>>>>>>> 677b5f897b4c7979cb110f02cbc2c6568c29a190
+=======
 int do_ls(char * path, char * param)
 {
 	param = param;
@@ -383,9 +597,7 @@ int do_ls(char * path, char * param)
 	// size in bytes
 	printf("%d ", (int) fileStat.st_size);
 	
-	// last modification time size_t strftime(char *s, size_t max, const char *format, const struct tm *tm);
-	// https://annuminas.technikum-wien.at/cgi-bin/yman2html?m=strftime&s=3
-	// time_t st_mtime
+	// last modification
 	struct tm * modTime;
 
 	modTime = localtime(&fileStat.st_mtime);
@@ -401,18 +613,26 @@ int do_ls(char * path, char * param)
 		printf("%s ", timeString);
 	}
 
+	//name
+	printf("%s", get_Name(path));
+
 	// -> softlink
 	errno = 0;
 		
 	retVal = readlink(path, linkPath, PATH_MAX-1);
 	if (retVal < 0)
 	{
+		if(errno == EINVAL)
+		{
+			printf("\n");
+			return EXIT_SUCCESS;
+		}
 		printf("\n%s\n", strerror(errno));
 		return EXIT_FAILURE;
 	}
 	// add terminating 0 , because readlink doesn't do it :(
 	linkPath[retVal] = '\0';
-	printf("%s", get_Name(path));
+	
 	printf(" -> %s\n", linkPath);
 	
 	return EXIT_SUCCESS;
@@ -488,3 +708,4 @@ char * get_Name(char * path)
 	}
 	return found+1;
 }
+>>>>>>> iss05
