@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <pwd.h>
 #include <grp.h>
+#include <time.h>
 #include "myfind.h"
 
 /* Constants */
@@ -381,9 +382,7 @@ int do_ls(char * path, char * param)
 	// size in bytes
 	printf("%d ", (int) fileStat.st_size);
 	
-	// last modification time size_t strftime(char *s, size_t max, const char *format, const struct tm *tm);
-	// https://annuminas.technikum-wien.at/cgi-bin/yman2html?m=strftime&s=3
-	// time_t st_mtime
+	// last modification
 	struct tm * modTime;
 
 	modTime = localtime(&fileStat.st_mtime);
@@ -399,18 +398,26 @@ int do_ls(char * path, char * param)
 		printf("%s ", timeString);
 	}
 
+	//name
+	printf("%s", get_Name(path));
+
 	// -> softlink
 	errno = 0;
 		
 	retVal = readlink(path, linkPath, PATH_MAX-1);
 	if (retVal < 0)
 	{
+		if(errno == EINVAL)
+		{
+			printf("\n");
+			return EXIT_SUCCESS;
+		}
 		printf("\n%s\n", strerror(errno));
 		return EXIT_FAILURE;
 	}
 	// add terminating 0 , because readlink doesn't do it :(
 	linkPath[retVal] = '\0';
-	printf("%s", get_Name(path));
+	
 	printf(" -> %s\n", linkPath);
 	
 	return EXIT_SUCCESS;
