@@ -52,11 +52,14 @@ int main(int argc, char** argv)
 	else
 	{
 <<<<<<< HEAD
+<<<<<<< HEAD
 		printf("%s: '%s': No such file or directory\n", argv[0], argv[1]);
 	} 
 
 	return 0;
 =======
+=======
+>>>>>>> iss05
 		return do_dir(".", (argv+1));
 	}
 <<<<<<< HEAD

@@ -22,6 +22,11 @@
  * @todo use const values in function declarations if possible
  */
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <pwd.h>
+#include <grp.h>
 #include "myfind.h"
 #include <unistd.h>
 #include <sys/stat.h>
@@ -45,6 +50,16 @@ const char * command_path = "-path";
 /* directory names */
 const char* upperDir = "..";
 const char* currentDir = ".";
+
+/* type names */
+const char * type_dir = "d";
+const char * type_block = "b";
+const char * type_character = "c";
+const char * type_pipe = "p";
+const char * type_file = "f";
+const char * type_link = "l";
+const char * type_socket = "s";
+//const char * type_Door = "D";
 
 /**
  * @brief [brief description]
@@ -178,6 +193,24 @@ int do_print(char * path, char * param);
  * @return [description]
  */
 int do_type(char * path, char * type);
+
+/**
+ * @brief [brief description]
+ * @details [long description]
+ * 
+ * @param param [description]
+ * @return [description]
+ */
+mode_t get_type(char * param);
+
+/**
+ * @brief [brief description]
+ * @details [long description]
+ * 
+ * @param path [description]
+ * @return [description]
+ */
+char * get_Name(char * path);
 
 bool IsValidPath(char * param)
 {
@@ -326,6 +359,7 @@ int parseParams(char ** params)
 			m_Parameters[index].param = NULL;
 			containsPrint = true;
 		}
+<<<<<<< HEAD
 		else if(strcmp((*params), command_path) == 0)
 		{
 			m_Parameters[index].func = &do_path;
@@ -339,12 +373,15 @@ int parseParams(char ** params)
 			params++;
 		}
 		/*
+=======
+>>>>>>> iss05
 		else if(strcmp((*params), command_ls) == 0)
 		{
 			m_Parameters[index].func = &do_ls;
 			m_Parameters[index].param = NULL;
 			containsPrint = true;	
 		}
+<<<<<<< HEAD
 		*/
 		else if(strcmp((*params), command_user) == 0)
 		{
@@ -356,6 +393,31 @@ int parseParams(char ** params)
 		{
 			m_Parameters[index].func = &do_nouser;
 			m_Parameters[index].param = NULL;
+=======
+		else if(strcmp((*params), command_type) == 0)
+		{
+			m_Parameters[index].func = &do_type;
+			params++;
+			if(params != NULL && *params != NULL)
+			{
+				if (strlen((*params)) != 1)
+				{
+					// @todo parameter must only be one character exception
+					return EXIT_FAILURE;
+				}
+				if (get_type(*params) == 0)
+				{
+					printf("%s: unknown argument to -type: %s", app_name, *params);
+					return EXIT_FAILURE;
+				}
+				m_Parameters[index].param = *params;
+			}
+			else
+			{
+				// @todo missing argument error
+				return EXIT_FAILURE;
+			}
+>>>>>>> iss05
 		}
 		else
 		{
@@ -386,6 +448,7 @@ int do_print(char * path, char * param)
 	return EXIT_SUCCESS;
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 int do_user(char * path, char * param)
 {
@@ -491,3 +554,117 @@ int do_path(char *path, char *pattern)
     return EXIT_FAILURE;
 }
 >>>>>>> 677b5f897b4c7979cb110f02cbc2c6568c29a190
+=======
+int do_ls(char * path, char * param)
+{
+	param = param;
+	struct stat fileStat;
+    if(stat(path,&fileStat) != 0)
+    {
+        return EXIT_FAILURE;
+    }
+	
+	printf("%d    %d ", (int) fileStat.st_ino, (int) fileStat.st_blocks);
+	
+	printf( (S_ISDIR(fileStat.st_mode)) ? "d" : "-");
+    printf( (fileStat.st_mode & S_IRUSR) ? "r" : "-");
+    printf( (fileStat.st_mode & S_IWUSR) ? "w" : "-");
+    printf( (fileStat.st_mode & S_IXUSR) ? "x" : "-");
+    printf( (fileStat.st_mode & S_IRGRP) ? "r" : "-");
+    printf( (fileStat.st_mode & S_IWGRP) ? "w" : "-");
+    printf( (fileStat.st_mode & S_IXGRP) ? "x" : "-");
+    printf( (fileStat.st_mode & S_IROTH) ? "r" : "-");
+    printf( (fileStat.st_mode & S_IWOTH) ? "w" : "-");
+    printf( (fileStat.st_mode & S_IXOTH) ? "x" : "-");
+
+    // number of links
+    printf("   %d ", (int) fileStat.st_nlink);
+	
+	// username struct passwd *getpwuid(uid_t uid);
+	struct passwd * user = getpwuid(fileStat.st_uid);
+	printf("%s    ", user->pw_name);
+	
+	// groupname struct group *getgrgid(gid_t gid);
+	struct group * grp = getgrgid(fileStat.st_gid);
+	printf("%s        ", grp->gr_name);
+	
+	// last modification time size_t strftime(char *s, size_t max, const char *format, const struct tm *tm);
+	// https://annuminas.technikum-wien.at/cgi-bin/yman2html?m=strftime&s=3
+	
+	// name
+	printf("%s\n", get_Name(path));
+	
+	return EXIT_SUCCESS;
+}
+
+int do_type(char * path, char * param)
+{
+	struct stat mstat;
+	if(stat(path, &mstat) == 0)
+	{
+		if((mstat.st_mode & get_type(param)) != 0)
+		{
+			return EXIT_SUCCESS;
+		}
+	}
+	
+	return EXIT_FAILURE;
+}
+
+mode_t get_type(char * param)
+{
+	if (strcmp(param, type_dir) == 0)
+	{
+		return S_IFDIR;
+	}
+	else if(strcmp(param, type_block) == 0)
+	{
+		return S_IFBLK;
+	}
+	else if(strcmp(param, type_character) == 0)
+	{
+		return S_IFCHR;
+	}
+	else if(strcmp(param, type_pipe) == 0)
+	{
+		return S_IFIFO;
+	}
+	else if(strcmp(param, type_file) == 0)
+	{
+		return S_IFMT;
+	}
+	else if(strcmp(param, type_link) == 0)
+	{
+		return S_IFLNK;
+	}
+	else if(strcmp(param, type_socket) == 0)
+	{
+		return S_IFSOCK;
+	}
+	/*
+	else if(strcmp(param, type_Door) == 0)
+	{
+		return 0;
+	}
+	*/
+	else
+	{
+		return 0;
+	}
+}
+
+char * get_Name(char * path)
+{
+	char * found = path;
+	char * temp = path;
+	while(temp != NULL)
+	{
+		if (*temp == '/')
+		{
+			found = temp;
+		}
+		temp++;
+	}
+	return found+1;
+}
+>>>>>>> iss05
