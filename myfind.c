@@ -344,12 +344,17 @@ int do_ls(char * path, char * param)
 {
 	param = param;
 	struct stat fileStat;
+	char linkPath[PATH_MAX];
+	const int timeString_size = 14;
+	char timeString[timeString_size]; //Aug  4  14:55\0
+	int retVal = 0;
+
     if(stat(path,&fileStat) != 0)
     {
         return EXIT_FAILURE;
     }
 	
-	printf("%d    %d ", (int) fileStat.st_ino, (int) fileStat.st_blocks);
+	printf("%d %d ", (int) fileStat.st_ino, (int) fileStat.st_blocks);
 	
 	printf( (S_ISDIR(fileStat.st_mode)) ? "d" : "-");
     printf( (fileStat.st_mode & S_IRUSR) ? "r" : "-");
@@ -363,21 +368,50 @@ int do_ls(char * path, char * param)
     printf( (fileStat.st_mode & S_IXOTH) ? "x" : "-");
 
     // number of links
-    printf("   %d ", (int) fileStat.st_nlink);
+    printf(" %d ", (int) fileStat.st_nlink);
 	
 	// username struct passwd *getpwuid(uid_t uid);
 	struct passwd * user = getpwuid(fileStat.st_uid);
-	printf("%s    ", user->pw_name);
+	printf("%s ", user->pw_name);
 	
 	// groupname struct group *getgrgid(gid_t gid);
 	struct group * grp = getgrgid(fileStat.st_gid);
-	printf("%s        ", grp->gr_name);
+	printf("%s ", grp->gr_name);
+
+	// size in bytes
+	printf("%d ", (int) fileStat.st_size);
 	
 	// last modification time size_t strftime(char *s, size_t max, const char *format, const struct tm *tm);
 	// https://annuminas.technikum-wien.at/cgi-bin/yman2html?m=strftime&s=3
+	// time_t st_mtime
+	struct tm * modTime;
+
+	modTime = localtime(&fileStat.st_mtime);
 	
-	// name
-	printf("%s\n", get_Name(path));
+	if(modTime != NULL)
+	{
+		retVal = strftime(timeString, timeString_size-1, "%b %d %H:%M", modTime);
+		if(retVal == 0)
+		{
+			return EXIT_FAILURE;
+		}
+		timeString[retVal] = '\0'; // better safe than sorry...
+		printf("%s ", timeString);
+	}
+
+	// -> softlink
+	errno = 0;
+		
+	retVal = readlink(path, linkPath, PATH_MAX-1);
+	if (retVal < 0)
+	{
+		printf("\n%s\n", strerror(errno));
+		return EXIT_FAILURE;
+	}
+	// add terminating 0 , because readlink doesn't do it :(
+	linkPath[retVal] = '\0';
+	printf("%s", get_Name(path));
+	printf(" -> %s\n", linkPath);
 	
 	return EXIT_SUCCESS;
 }
