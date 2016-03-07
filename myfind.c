@@ -18,6 +18,7 @@
  */
 #include <string.h> //strcmp
 #include <unistd.h>
+#include <stdlib.h> // calloc, free
 #include <pwd.h>
 #include <grp.h> // 
 #include <time.h> // localtime...
@@ -26,6 +27,7 @@
 #include <dirent.h> // readdir, opendir...
 #include <stdio.h> // printf
 #include <fnmatch.h> // fnmatch
+#include <errno.h>
 #include "myfind.h"
 
 /* Constants */
@@ -242,6 +244,7 @@ int do_dir(char * dir, char ** params)
 	if(!(pdir = opendir(dir)))
 	{
 		/* cannot open dir */
+		printf("cannot open dir: %s\n", dir);
 		return EXIT_FAILURE;
 	}
 
@@ -253,9 +256,10 @@ int do_dir(char * dir, char ** params)
 		if (path == NULL)
 		{
 			// @todo print error message
+			printf("mem alloc failed in do_dir\n");
 			return EXIT_FAILURE;
 		}
-		int len = snprintf(path, size-1, "%s/%s", dir, item->d_name);
+		int len = snprintf(path, size, "%s/%s", dir, item->d_name);
 		//int len = snprintf(path, sizeof(path)-1, "%s/%s", dir, item->d_name);
 		path[len] = 0;
 		if(item->d_type == DT_DIR)
@@ -429,7 +433,10 @@ int do_nouser(char * path, char * param)
 	struct passwd *get_uid;
 	struct stat buf;
 	int item_uid;
-	int uid;
+	//int uid;
+
+	// unused parameter warning
+	param = param;
 
 	if(stat(path, &buf) == -1)
 	{
@@ -678,10 +685,11 @@ int myfind(char * path, char ** params)
 	if (p_mParameters == NULL)
 	{
 		// @todo print error message mem alloc failed
+		printf("memory alloc failed in myfind\n");
 		return EXIT_FAILURE;
 	}
 
-	parseParams(parans);
+	//parseParams(params);
 
 	retVal = do_dir(path, params);
 
