@@ -17,21 +17,7 @@
 #ifndef MYFIND_H
 #define MYFIND_H
 
-#include <stdio.h>
 #include <stdbool.h>
-#include <dirent.h>
-#include <sys/types.h>
-#include <errno.h>
-#include <limits.h> /* PATH_MAX */
-#include <unistd.h>
-<<<<<<< HEAD
-#include <pwd.h>
-#include <sys/stat.h>
-#include <stdlib.h>
-=======
-#include <fnmatch.h>
-#include <sys/stat.h>
->>>>>>> 677b5f897b4c7979cb110f02cbc2c6568c29a190
 
 /**
  * @brief global variable for the application name
@@ -58,6 +44,8 @@ extern char * app_name;
  */
 #define EXIT_FAILURE 1
 
+#define USE_DYNAMIC_MEM
+
 /**
  * @brief checks if the string is a valid path
  * @details checks if the first char of the string is a '-',
@@ -83,14 +71,14 @@ bool IsValidPath(char * param);
 int do_dir(char * dir, char ** params);
 
 /**
- * @brief [brief description] 
+ * @brief [brief description]
  * @details [long description]
  * 
- * @param file [description]
+ * @param path [description]
  * @param params [description]
  * 
  * @return [description]
  */
-int do_file(char * file, char ** params);
+int myfind(char * path, char ** params);
 
 #endif

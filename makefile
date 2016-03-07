@@ -3,18 +3,18 @@
 ## Betriebssysteme Makefile
 ## Beispiel 1
 ##
-## @author Thomas M. Galla <galla@technikum-wien.at> (tdxxx)
-## @author Bernd Petrovitsch <bernd.petrovitsch@technikum-wien.at>
-## @date 2016/03/04
+## 
+## @author Florian Froestl <florian.froestl@technikum-wien.at>
+## @author David Boisits <david.boisits@technikum-wien.at>
+## @author Markus Diewald <markus.diewald@technikum-wien.at>
 ##
-## @version $Revision: 1689 $
+## @date 2016/02/24
+##
+## @version $Revision: 100 $
 ##
 ## @todo
 ##
-## URL: $HeadURL: https://svn.petrovitsch.priv.at/ICSS-BES/trunk/2015/CIS/lu/hello/Makefile $
-##
-## Last Modified: $Author: tom $
-##
+## 
 
 ##
 ## ------------------------------------------------------------- variables --

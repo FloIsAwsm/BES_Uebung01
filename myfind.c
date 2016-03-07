@@ -4,37 +4,29 @@
  * Beispiel 1
  * 
  * @author Florian Froestl <florian.froestl@technikum-wien.at>
-<<<<<<< HEAD
- * @author Markus Diewald <ic15b068@technikum-wien.at>
- * @author
-=======
  * @author David Boisits <david.boisits@technikum-wien.at>
  * @author Markus Diewald <markus.diewald@technikum-wien.at>
->>>>>>> 677b5f897b4c7979cb110f02cbc2c6568c29a190
  * 
  * @date 2016/02/22
  * 
  * @version 100
  * 
- * @todo implement command functions
  * @todo complete documentation
  * @todo comment code
  * @todo use const values in function declarations if possible
+ * @todo comment why we need includes (functions or data-types)
  */
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <string.h> //strcmp
 #include <unistd.h>
 #include <pwd.h>
-#include <grp.h>
-#include <time.h>
-#include "myfind.h"
-#include <unistd.h>
+#include <grp.h> // 
+#include <time.h> // localtime...
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <dirent.h>
-#include <stdio.h>
-#include <fnmatch.h>
+#include <dirent.h> // readdir, opendir...
+#include <stdio.h> // printf
+#include <fnmatch.h> // fnmatch
+#include "myfind.h"
 
 /* Constants */
 /* Error messages */
@@ -213,6 +205,7 @@ mode_t get_type(char * param);
  */
 char * get_Name(char * path);
 
+
 bool IsValidPath(char * param)
 {
 	if(param[0] == '-')
@@ -222,54 +215,7 @@ bool IsValidPath(char * param)
 	return true;
 }
 
-<<<<<<< HEAD
-int do_dir(char * dir, char ** params) 
-{ 
-	DIR * pdir;		 
- 	struct dirent * item; 
- 	 
- 	static bool firstEntry = true; 
- 	if (firstEntry) 
- 	{ 
- 		if(parseParams(params) == EXIT_FAILURE) 
- 		{ 
- 			return EXIT_FAILURE; 
- 		} 
- 	} 
- 
- 
- 	handleParams(dir); 
- 
- 
- 	if(!(pdir = opendir(dir))) 
- 	{ 
- 		/* cannot open dir */ 
- 		return EXIT_FAILURE; 
- 	} 
- 
- 	while ((item = readdir(pdir))) 
- 	{ 
- 		char path[PATH_MAX]; 
- 		int len = snprintf(path, sizeof(path)-1, "%s/%s", dir, item->d_name); 
- 		path[len] = 0; 
- 		if(item->d_type == DT_DIR) 
- 		{ 
- 			if (!(strcmp(item->d_name, currentDir) == 0 || strcmp(item->d_name, upperDir) == 0)) 
- 			{ 
- 				//handleParams(path); 
- 				do_dir(path, params); /* what if we return with EXIT_FAILURE */ 
- 			} 
- 		} 
- 		else 
- 		{ 
- 			//do_file(path, params); 
- 		} 
- 	} 
- 	closedir(pdir); 
- 	return EXIT_SUCCESS; 
-} 
 
-=======
 int do_dir(char * dir, char ** params)
 {
 	DIR * pdir;		
@@ -301,33 +247,32 @@ int do_dir(char * dir, char ** params)
 
 	while ((item = readdir(pdir)))
 	{
-		char path[PATH_MAX];
-		int len = snprintf(path, sizeof(path)-1, "%s/%s", dir, item->d_name);
+		//char path[PATH_MAX];
+		int size = strlen(dir) + strlen(item->d_name) + 2; // terminating null + seperating /
+		char * path = (char *) calloc(size, sizeof(char));
+		if (path == NULL)
+		{
+			// @todo print error message
+			return EXIT_FAILURE;
+		}
+		int len = snprintf(path, size-1, "%s/%s", dir, item->d_name);
+		//int len = snprintf(path, sizeof(path)-1, "%s/%s", dir, item->d_name);
 		path[len] = 0;
 		if(item->d_type == DT_DIR)
 		{
 			if (!(strcmp(item->d_name, currentDir) == 0 || strcmp(item->d_name, upperDir) == 0))
 			{
-				//handleParams(path);
 				do_dir(path, params); /* what if we return with EXIT_FAILURE */
 			}
 		}
 		else
 		{
-			do_file(path, params);
+			handleParams(path);
 		}
+		free(path);
 	}
 	closedir(pdir);
 	return EXIT_SUCCESS;
-}
->>>>>>> master
-
-int do_file(char * file, char ** params)
-{
-	if(params)
-	{
-	}
-	return handleParams(file);
 }
 
 int handleParams(char * path)
@@ -348,6 +293,8 @@ int handleParams(char * path)
 	return EXIT_SUCCESS;
 }
 
+// @todo check params+1 != NULL before writing it in the struct
+// @todo write an appropriate error message if params+1 == NULL
 int parseParams(char ** params)
 {
 	int index = 0;
@@ -360,7 +307,12 @@ int parseParams(char ** params)
 			m_Parameters[index].param = NULL;
 			containsPrint = true;
 		}
-<<<<<<< HEAD
+		else if(strcmp((*params), command_ls) == 0)
+		{
+			m_Parameters[index].func = &do_ls;
+			m_Parameters[index].param = NULL;
+			containsPrint = true;
+		}
 		else if(strcmp((*params), command_path) == 0)
 		{
 			m_Parameters[index].func = &do_path;
@@ -373,17 +325,6 @@ int parseParams(char ** params)
 			m_Parameters[index].param = *(params+1);
 			params++;
 		}
-		/*
-=======
->>>>>>> iss05
-		else if(strcmp((*params), command_ls) == 0)
-		{
-			m_Parameters[index].func = &do_ls;
-			m_Parameters[index].param = NULL;
-			containsPrint = true;	
-		}
-<<<<<<< HEAD
-		*/
 		else if(strcmp((*params), command_user) == 0)
 		{
 			m_Parameters[index].func = &do_user;
@@ -394,7 +335,7 @@ int parseParams(char ** params)
 		{
 			m_Parameters[index].func = &do_nouser;
 			m_Parameters[index].param = NULL;
-=======
+		}
 		else if(strcmp((*params), command_type) == 0)
 		{
 			m_Parameters[index].func = &do_type;
@@ -418,7 +359,6 @@ int parseParams(char ** params)
 				// @todo missing argument error
 				return EXIT_FAILURE;
 			}
->>>>>>> iss05
 		}
 		else
 		{
@@ -449,8 +389,7 @@ int do_print(char * path, char * param)
 	return EXIT_SUCCESS;
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 int do_user(char * path, char * param)
 {
 	struct stat buf;
@@ -476,9 +415,13 @@ int do_user(char * path, char * param)
 	}
 
 	if(item_uid == uid)
+	{
 		return EXIT_SUCCESS;
+	}
 	else
-		return EXIT_FAILURE;	
+	{
+		return EXIT_FAILURE;
+	}	
 }
 
 int do_nouser(char * path, char * param)
@@ -497,12 +440,16 @@ int do_nouser(char * path, char * param)
 
 	get_uid = getpwuid(item_uid);
 	if(get_uid == NULL)
+	{
 		return EXIT_SUCCESS;
+	}
 	else
+	{
 		return EXIT_FAILURE;
+	}
 	
 }
-=======
+
 int do_name(char *path, char *pattern)
 {
 	int flags = 0;
@@ -554,8 +501,7 @@ int do_path(char *path, char *pattern)
     
     return EXIT_FAILURE;
 }
->>>>>>> 677b5f897b4c7979cb110f02cbc2c6568c29a190
-=======
+
 int do_ls(char * path, char * param)
 {
 	param = param;
@@ -708,4 +654,38 @@ char * get_Name(char * path)
 	}
 	return found+1;
 }
->>>>>>> iss05
+
+
+int myfind(char * path, char ** params)
+{
+	// count params
+	int cnt = 0; // this has to be global
+	int retVal = 0;
+
+	while (*params != NULL)
+	{
+		if ((*params)[0] == '-')
+		{
+			cnt++;
+		}
+		params++;
+	}
+
+	// create mParamsArray
+	sParam * p_mParameters;
+	p_mParameters = (sParam *) calloc(cnt + 1, sizeof(sParam));
+	// check if successful
+	if (p_mParameters == NULL)
+	{
+		// @todo print error message mem alloc failed
+		return EXIT_FAILURE;
+	}
+
+	parseParams(parans);
+
+	retVal = do_dir(path, params);
+
+	free(p_mParameters);
+
+	return retVal;
+}
