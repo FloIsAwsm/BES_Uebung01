@@ -305,6 +305,9 @@ int handleParams(char * path)
 	{
 		do_print(path, NULL);
 	}
+#ifdef LOG_ENABLED
+	do_log("exiting handleParams...");
+#endif
 	return EXIT_SUCCESS;
 }
 
@@ -412,7 +415,7 @@ int parseParams(char ** params)
 			}
 			else
 			{
-				printf("paths must exceed the exp...");
+				printf("paths must exceed the exp...\n");
 			}
 			return EXIT_FAILURE;
 		}
@@ -596,14 +599,17 @@ int do_ls(char * path, char * param)
 	}
 
 	//name
+	/*
 	char * name = get_Name(path);
 	if (name != NULL)
 	{
 		printf("%s", name);
 	}
-
+	*/
+	printf("%s", path);
 	// -> softlink
 	errno = 0;
+	
 		
 	retVal = readlink(path, linkPath, PATH_MAX-2);
 	if (retVal < 0)
@@ -696,7 +702,7 @@ char * get_Name(char * path)
 
 	char * found = path;
 	char * temp = path;
-	while(temp != NULL)
+	while(temp != NULL && *temp != '\0')
 	{
 		if (*temp == '/')
 		{
@@ -704,7 +710,14 @@ char * get_Name(char * path)
 		}
 		temp++;
 	}
-	return found+1;
+	if(found != NULL && found != NULL)
+	{
+		return found+1;
+	}
+	else
+	{
+		return path;
+	}
 }
 
 
