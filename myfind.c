@@ -312,7 +312,7 @@ int handleParams(char * path)
 // @todo write an appropriate error message if params+1 == NULL
 int parseParams(char ** params)
 {
-#ifdef
+#ifdef LOG_ENABLED
 	do_log("parseParams...");
 #endif
 
@@ -433,7 +433,7 @@ int do_print(char * path, char * param)
 
 int do_user(char * path, char * param)
 {	
-#ifdef
+#ifdef LOG_ENABLED
 	do_log("do_user...");
 #endif
 
@@ -471,7 +471,7 @@ int do_user(char * path, char * param)
 
 int do_nouser(char * path, char * param)
 {
-#ifdef
+#ifdef LOG_ENABLED
 	do_log("do_nouser...");
 #endif
 
@@ -504,7 +504,7 @@ int do_nouser(char * path, char * param)
 
 int do_name(char *path, char *pattern)
 {
-#ifdef
+#ifdef LOG_ENABLED
 	do_log("do_name...");
 #endif
 
@@ -520,7 +520,7 @@ int do_name(char *path, char *pattern)
 
 int do_path(char *path, char *pattern)
 {
-#ifdef
+#ifdef LOG_ENABLED
 	do_log("do_path...");
 #endif
 
@@ -536,7 +536,7 @@ int do_path(char *path, char *pattern)
 
 int do_ls(char * path, char * param)
 {	
-#ifdef
+#ifdef LOG_ENABLED
 	do_log("do_ls...");
 #endif
 
@@ -622,7 +622,7 @@ int do_ls(char * path, char * param)
 
 int do_type(char * path, char * param)
 {
-#ifdef
+#ifdef LOG_ENABLED
 	do_log("do_type...");
 #endif
 
@@ -640,7 +640,7 @@ int do_type(char * path, char * param)
 
 mode_t get_type(char * param)
 {
-#ifdef
+#ifdef LOG_ENABLED
 	do_log("get_type...");
 #endif
 
@@ -686,7 +686,7 @@ mode_t get_type(char * param)
 
 char * get_Name(char * path)
 {
-#ifdef
+#ifdef LOG_ENABLED
 	do_log("get_Name...");
 #endif
 
