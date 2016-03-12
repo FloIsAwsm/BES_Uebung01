@@ -141,7 +141,7 @@ int do_name(char *path, char *pattern);
  * @param path path including filename which needs to be checked
  * @param user username or UID
  * 
- * @return [description]
+ * @return EXIT_SUCCESS if the file or directory matches the user in param, EXIT_FAILURE otherwise
  */
 int do_user(char * path, char * param);
 
@@ -320,20 +320,42 @@ int parseParams(char ** params)
 		else if(strcmp((*params), command_path) == 0)
 		{
 			m_Parameters[index].func = &do_path;
-			m_Parameters[index].param = *(params+1);;
 			params++;
+			if (*params != NULL)
+			{
+				m_Parameters[index].param = *(params);
+			}
+			else
+			{
+				// print error message
+				return EXIT_FAILURE;
+			}
 		}		
 		else if(strcmp((*params), command_name) == 0)
 		{
 			m_Parameters[index].func = &do_name;
-			m_Parameters[index].param = *(params+1);
-			params++;
+			if (*params != NULL)
+			{
+				m_Parameters[index].param = *(params);
+			}
+			else
+			{
+				// print error message
+				return EXIT_FAILURE;
+			}
 		}
 		else if(strcmp((*params), command_user) == 0)
 		{
 			m_Parameters[index].func = &do_user;
-			m_Parameters[index].param = *(params+1);
-			params++;
+			if (*params != NULL)
+			{
+				m_Parameters[index].param = *(params);
+			}
+			else
+			{
+				// print error message
+				return EXIT_FAILURE;
+			}
 		}
 		else if(strcmp((*params), command_nouser) == 0)
 		{
@@ -386,9 +408,7 @@ int parseParams(char ** params)
 
 int do_print(char * path, char * param)
 {
-	if(param == NULL)
-	{
-	}
+	param = param;
 	printf("%s\n", path);
 	return EXIT_SUCCESS;
 }
@@ -460,22 +480,8 @@ int do_nouser(char * path, char * param)
 int do_name(char *path, char *pattern)
 {
 	int flags = 0;
-	char buffer[PATH_MAX+1];
-	char * temp;
 	
-	if(pattern[0] != '*')
-	{
-		int len = snprintf(buffer, sizeof(buffer)-1, "%s%s", "*", pattern);
-		
-		buffer[len] = 0;
-		temp = buffer;
-	}
-	else
-	{
-		temp = pattern;
-	}
-	
-	if (fnmatch(temp, path, flags) == 0)    
+	if (fnmatch(pattern, get_Name(path), flags) == 0)    
 	{
 		return EXIT_SUCCESS;
     }
@@ -486,22 +492,8 @@ int do_name(char *path, char *pattern)
 int do_path(char *path, char *pattern)
 {
 	int flags = 0;
-	char buffer[PATH_MAX+1];
-	char * temp;
 	
-	if(pattern[0] != '*')
-	{
-		int len = snprintf(buffer, sizeof(buffer)-1, "%s%s", "*", pattern);
-		
-		buffer[len] = 0;
-		temp = buffer;
-	}
-	else
-	{
-		temp = pattern;
-	}
-	
-	if (fnmatch(temp, path, flags) == 0)    
+	if (fnmatch(pattern, path, flags) == 0)    
 	{
 		return EXIT_SUCCESS;
     }
@@ -671,6 +663,7 @@ int myfind(char * path, char ** params)
 
 	while (*params != NULL)
 	{
+		// @todo find a better way... this will not work
 		if ((*params)[0] == '-')
 		{
 			cnt++;
