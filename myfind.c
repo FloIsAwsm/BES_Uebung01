@@ -596,7 +596,11 @@ int do_ls(char * path, char * param)
 	}
 
 	//name
-	printf("%s", get_Name(path));
+	char * name = get_Name(path);
+	if (name != NULL)
+	{
+		printf("%s", name);
+	}
 
 	// -> softlink
 	errno = 0;
@@ -613,7 +617,7 @@ int do_ls(char * path, char * param)
 		return EXIT_FAILURE;
 	}
 	// add terminating 0 , because readlink doesn't do it :(
-	linkPath[retVal] = '\0';
+	linkPath[retVal] = 0;
 	
 	printf(" -> %s\n", linkPath);
 	
