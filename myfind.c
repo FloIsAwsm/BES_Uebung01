@@ -31,6 +31,8 @@
 #include "myfind.h"
 
 /* Constants */
+/* defines */
+#define LOG_ENABLED
 /* Error messages */
 const char * err_msg_unknown_pred = "unknown predicate: ";
 const char * err_msg_missing_arg = "missing argument to ";
@@ -55,6 +57,10 @@ const char * type_file = "f";
 const char * type_link = "l";
 const char * type_socket = "s";
 //const char * type_Door = "D";
+
+#ifdef LOG_ENABLED
+int do_log(char * msg);
+#endif 
 
 /**
  * @brief [brief description]
@@ -210,6 +216,11 @@ char * get_Name(char * path);
 
 bool IsValidPath(char * param)
 {
+	if(param == NULL)
+	{
+		return false;
+	}
+
 	if(param[0] == '-')
 	{
 		return false;
@@ -301,6 +312,10 @@ int handleParams(char * path)
 // @todo write an appropriate error message if params+1 == NULL
 int parseParams(char ** params)
 {
+#ifdef
+	do_log("parseParams...");
+#endif
+
 	int index = 0;
 	m_Parameters[index].func = NULL;
 	while((*params) != NULL && index < (MAX_PARAMS-1))
@@ -334,6 +349,7 @@ int parseParams(char ** params)
 		else if(strcmp((*params), command_name) == 0)
 		{
 			m_Parameters[index].func = &do_name;
+			params++;
 			if (*params != NULL)
 			{
 				m_Parameters[index].param = *(params);
@@ -347,6 +363,7 @@ int parseParams(char ** params)
 		else if(strcmp((*params), command_user) == 0)
 		{
 			m_Parameters[index].func = &do_user;
+			params++;
 			if (*params != NULL)
 			{
 				m_Parameters[index].param = *(params);
@@ -415,7 +432,11 @@ int do_print(char * path, char * param)
 
 
 int do_user(char * path, char * param)
-{
+{	
+#ifdef
+	do_log("do_user...");
+#endif
+
 	struct stat buf;
 	long int uid;
 	long int item_uid;
@@ -450,6 +471,10 @@ int do_user(char * path, char * param)
 
 int do_nouser(char * path, char * param)
 {
+#ifdef
+	do_log("do_nouser...");
+#endif
+
 	struct passwd *get_uid;
 	struct stat buf;
 	int item_uid;
@@ -479,6 +504,10 @@ int do_nouser(char * path, char * param)
 
 int do_name(char *path, char *pattern)
 {
+#ifdef
+	do_log("do_name...");
+#endif
+
 	int flags = 0;
 	
 	if (fnmatch(pattern, get_Name(path), flags) == 0)    
@@ -491,6 +520,10 @@ int do_name(char *path, char *pattern)
 
 int do_path(char *path, char *pattern)
 {
+#ifdef
+	do_log("do_path...");
+#endif
+
 	int flags = 0;
 	
 	if (fnmatch(pattern, path, flags) == 0)    
@@ -502,15 +535,19 @@ int do_path(char *path, char *pattern)
 }
 
 int do_ls(char * path, char * param)
-{
+{	
+#ifdef
+	do_log("do_ls...");
+#endif
+
 	param = param;
 	struct stat fileStat;
 	char linkPath[PATH_MAX];
-	const int timeString_size = 14;
+	const int timeString_size = 15;
 	char timeString[timeString_size]; //Aug  4  14:55\0
 	int retVal = 0;
 
-    if(stat(path,&fileStat) != 0)
+    if(stat(path, &fileStat) != 0)
     {
         return EXIT_FAILURE;
     }
@@ -549,7 +586,7 @@ int do_ls(char * path, char * param)
 	
 	if(modTime != NULL)
 	{
-		retVal = strftime(timeString, timeString_size-1, "%b %d %H:%M", modTime);
+		retVal = strftime(timeString, timeString_size-2, "%b %d %H:%M", modTime);
 		if(retVal == 0)
 		{
 			return EXIT_FAILURE;
@@ -564,7 +601,7 @@ int do_ls(char * path, char * param)
 	// -> softlink
 	errno = 0;
 		
-	retVal = readlink(path, linkPath, PATH_MAX-1);
+	retVal = readlink(path, linkPath, PATH_MAX-2);
 	if (retVal < 0)
 	{
 		if(errno == EINVAL)
@@ -585,6 +622,10 @@ int do_ls(char * path, char * param)
 
 int do_type(char * path, char * param)
 {
+#ifdef
+	do_log("do_type...");
+#endif
+
 	struct stat mstat;
 	if(stat(path, &mstat) == 0)
 	{
@@ -599,6 +640,10 @@ int do_type(char * path, char * param)
 
 mode_t get_type(char * param)
 {
+#ifdef
+	do_log("get_type...");
+#endif
+
 	if (strcmp(param, type_dir) == 0)
 	{
 		return S_IFDIR;
@@ -641,6 +686,10 @@ mode_t get_type(char * param)
 
 char * get_Name(char * path)
 {
+#ifdef
+	do_log("get_Name...");
+#endif
+
 	char * found = path;
 	char * temp = path;
 	while(temp != NULL)
@@ -690,3 +739,31 @@ int myfind(char * path, char ** params)
 
 	return retVal;
 }
+
+#ifdef LOG_ENABLED
+
+int do_log(char * msg)
+{
+	if(msg == NULL)
+	{
+		return EXIT_FAILURE;
+	}
+	// open file
+	FILE * pFile;
+
+	pFile = fopen("myfind.log", "a");
+
+	if(pFile == NULL)
+	{
+		return EXIT_FAILURE;
+	}
+
+	// append msg to file
+	fprintf(pf, "%s\n", msg);
+
+	// close file
+	fclose(pFile);
+
+	return EXIT_SUCCESS;
+}
+#endif
