@@ -759,7 +759,7 @@ int do_log(char * msg)
 	}
 
 	// append msg to file
-	fprintf(pf, "%s\n", msg);
+	fprintf(pFile, "%s\n", msg);
 
 	// close file
 	fclose(pFile);
