@@ -32,7 +32,7 @@
 
 /* Constants */
 /* defines */
-#define LOG_ENABLED
+//#define LOG_ENABLED
 /* Error messages */
 const char * err_msg_unknown_pred = "unknown predicate: ";
 const char * err_msg_missing_arg = "missing argument to ";
@@ -238,24 +238,31 @@ int do_dir(char * dir, char ** params)
 	if (firstEntry)
 	{
 		struct stat mstat;
+		errno = 0;
 		if(stat(dir, &mstat) != 0)
 		{
-			printf("%s: '%s': %s\n", app_name, dir, strerror(errno));
+			fprintf(stderr, "%s: '%s': %s\n", app_name, dir, strerror(errno));
 			return EXIT_FAILURE;
 		}
 		if(parseParams(params) == EXIT_FAILURE)
 		{
 			return EXIT_FAILURE;
 		}
+		if(!S_ISDIR(mstat.st_mode))
+		{
+			handleParams(dir);
+			return EXIT_SUCCESS;
+		}
 		firstEntry = false;
 	}
 
 	handleParams(dir);
-
+	
+	errno = 0;
 	if(!(pdir = opendir(dir)))
 	{
 		/* cannot open dir */
-		printf("cannot open dir: %s\n", dir);
+		fprintf(stderr, "%s: '%s': %s\n", app_name, dir, strerror(errno));
 		return EXIT_FAILURE;
 	}
 
@@ -267,7 +274,7 @@ int do_dir(char * dir, char ** params)
 		if (path == NULL)
 		{
 			// @todo print error message
-			printf("mem alloc failed in do_dir\n");
+			fprintf(stderr, "memory allocation failed in do_dir\n");
 			return EXIT_FAILURE;
 		}
 		int len = snprintf(path, size, "%s/%s", dir, item->d_name);
@@ -365,6 +372,7 @@ int parseParams(char ** params)
 		}
 		else if(strcmp((*params), command_user) == 0)
 		{
+			// @todo check if user exists
 			m_Parameters[index].func = &do_user;
 			params++;
 			if (*params != NULL)
@@ -395,7 +403,7 @@ int parseParams(char ** params)
 				}
 				if (get_type(*params) == 0)
 				{
-					printf("%s: unknown argument to -type: %s", app_name, *params);
+					fprintf(stderr, "%s: unknown argument to -type: %s", app_name, *params);
 					return EXIT_FAILURE;
 				}
 				m_Parameters[index].param = *params;
@@ -411,11 +419,11 @@ int parseParams(char ** params)
 			/* print error message */
 			if((*params)[0] == '-')
 			{
-				printf("%s%s\n", err_msg_unknown_pred, (*params));
+				fprintf(stderr, "%s%s\n", err_msg_unknown_pred, (*params));
 			}
 			else
 			{
-				printf("paths must exceed the exp...\n");
+				fprintf(stderr, "paths must exceed the expression\n");
 			}
 			return EXIT_FAILURE;
 		}
@@ -429,7 +437,7 @@ int parseParams(char ** params)
 int do_print(char * path, char * param)
 {
 	param = param;
-	printf("%s\n", path);
+	fprintf(stdout, "%s\n", path);
 	return EXIT_SUCCESS;
 }
 
@@ -446,11 +454,17 @@ int do_user(char * path, char * param)
 	struct passwd *get_uid;
 	char *pEnd;
 	
-	if(stat(path, &buf) == -1)
+	errno = 0;
+	if(stat(path, &buf) < 0)
 	{
-		perror("stat");
+		//perror("stat");
+		fprintf(stderr, "%s: '%s': %s\n", app_name, path, strerror(errno));
 		return EXIT_FAILURE;
 	}
+	// @todo try assuming param is a userid first...
+	// therefore check useage of strtol(...)
+	// link: http://man7.org/linux/man-pages/man3/strtol.3.html
+	
 	item_uid = buf.st_uid;
 	get_uid = getpwnam(param);
 	if(get_uid == NULL) /* no existing user with entered username */
@@ -744,7 +758,7 @@ int myfind(char * path, char ** params)
 	if (p_mParameters == NULL)
 	{
 		// @todo print error message mem alloc failed
-		printf("memory alloc failed in myfind\n");
+		fprintf(stderr, "memory alloc failed in myfind\n");
 		return EXIT_FAILURE;
 	}
 
