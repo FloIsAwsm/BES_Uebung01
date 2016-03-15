@@ -83,7 +83,7 @@ char * app_name;
  * @param params the parameters we have to process
  * @return EXIT_SUCCESS if all commands are understood, EXIT_FAILURE otherwise 
  */
-int parseParams(char ** params);
+static int parseParams(char ** params);
 
 /**
  * @brief calls the parameter functions on a path
@@ -93,7 +93,7 @@ int parseParams(char ** params);
  * @param path the path we have to use the parameters on
  * @return EXIT_FAILURE or EXIT_SUCCESS
  */
-int handleParams(char * path);
+static int handleParams(char * path);
 
 /**
  * @brief function pointer for our array of parameter functions
@@ -131,7 +131,7 @@ static sParam m_Parameters [MAX_PARAMS];
  * 
  * @return EXIT_FAILURE on error, EXIT_SUCCESS otherwise
  */
-int do_ls(char *path, char *pattern);
+static int do_ls(char *path, char *pattern);
 
 /**
  * @brief function which matches a given path with the pattern
@@ -142,7 +142,7 @@ int do_ls(char *path, char *pattern);
  * 
  * @return EXIT_SUCCESS or EXIT_FAILURE
  */
-int do_name(char *path, char *pattern);
+static int do_name(char *path, char *pattern);
 
 /**
  * @brief checks a file if the owner of it equals the entered user
@@ -153,7 +153,7 @@ int do_name(char *path, char *pattern);
  * 
  * @return EXIT_SUCCESS if the file or directory matches the user in param, EXIT_FAILURE otherwise
  */
-int do_user(char * path, char * param);
+static int do_user(char * path, char * param);
 
 /**
  * @brief checks a file if it has a valid owner
@@ -164,7 +164,7 @@ int do_user(char * path, char * param);
  * 
  * @return returns EXIT_SUCCESS, if the file has no valid owner, EXIT_FAILURE otherwise
  */
-int do_nouser(char * path, char * param);
+static int do_nouser(char * path, char * param);
 
 /**
  * @brief path with pattern matching
@@ -175,7 +175,7 @@ int do_nouser(char * path, char * param);
  * 
  * @return EXIT_SUCCESS or EXIT_FAILURE
  */
-int do_path(char * path, char * pattern);
+static int do_path(char * path, char * pattern);
 
 /**
  * @brief prints the path on the console
@@ -186,7 +186,7 @@ int do_path(char * path, char * pattern);
  * 
  * @return always EXIT_SUCCESS
  */
-int do_print(char * path, char * param);
+static int do_print(char * path, char * param);
 
 /**
  * @brief determines if a file is of a specific type
@@ -197,16 +197,16 @@ int do_print(char * path, char * param);
  * 
  * @return EXIT_SUCCESS if the file is of that type, EXIT_FAILURE otherwise
  */
-int do_type(char * path, char * type);
+static int do_type(char * path, char * type);
 
 /**
  * @brief converts a c string with one letter into a type bitmask
- * @details converts a 
+ * @details converts a c string into a bitmask for it's defined type
  * 
  * @param param c string containing the type specifier
  * @return the bitmask defined by param, 0 on failure
  */
-mode_t get_type(char * param);
+static mode_t get_type(char * param);
 
 /**
  * @brief converts a path into a filename
@@ -215,7 +215,12 @@ mode_t get_type(char * param);
  * @param path the path with the filename at the end
  * @return a pointer to the start of the filename
  */
-char * get_Name(char * path);
+static char * get_Name(char * path);
+
+/**
+ * @brief prints the useage of this module
+ */
+static void printusage(void);
 
 
 bool IsValidPath(char * param)
@@ -263,22 +268,22 @@ int do_dir(char * dir, char ** params)
 	handleParams(dir);
 	
 	errno = 0;
-	if(!(pdir = opendir(dir)))
+	pdir = opendir(dir);
+	if(pdir == NULL)
 	{
 		/* cannot open dir */
 		fprintf(stderr, "%s: '%s': %s\n", app_name, dir, strerror(errno));
 		return EXIT_FAILURE;
 	}
 
-	while ((item = readdir(pdir)))
+	errno = 0;
+	while ((item = readdir(pdir)) != NULL)
 	{
-		//char path[PATH_MAX];
 		int size = strlen(dir) + strlen(item->d_name) + 2; // terminating null + seperating /
 		char * path = (char *) calloc(size, sizeof(char));
 		if (path == NULL)
 		{
-			// @todo print error message
-			fprintf(stderr, "%s\n", strerror(ENOMEM));
+			fprintf(stderr, "%s: %s\n", app_name, strerror(ENOMEM));
 			return EXIT_FAILURE;
 		}
 		int len = snprintf(path, size, "%s/%s", dir, item->d_name);
@@ -295,12 +300,24 @@ int do_dir(char * dir, char ** params)
 			handleParams(path);
 		}
 		free(path);
+		errno = 0;
+	}
+	if(errno != 0)
+	{
+		fprintf(stderr, "%s: %s\n", app_name, strerror(errno));
+		// @todo do we have to call closedir???
+		return EXIT_FAILURE;
 	}
 	closedir(pdir);
+	if(errno != 0)
+	{
+		fprintf(stderr, "%s: %s\n", app_name, strerror(errno));
+		return EXIT_FAILURE;
+	}
 	return EXIT_SUCCESS;
 }
 
-int handleParams(char * path)
+static int handleParams(char * path)
 {
 	int index = 0;
 	while(m_Parameters[index].func != NULL)
@@ -322,8 +339,7 @@ int handleParams(char * path)
 }
 
 // @todo check params+1 != NULL before writing it in the struct
-// @todo write an appropriate error message if params+1 == NULL
-int parseParams(char ** params)
+static int parseParams(char ** params)
 {
 #ifdef LOG_ENABLED
 	do_log("parseParams...");
@@ -355,7 +371,8 @@ int parseParams(char ** params)
 			}
 			else
 			{
-				// print error message
+				fprintf(stderr, "%s: %s'%s'\n", app_name, err_msg_missing_arg, command_path);
+				printusage();
 				return EXIT_FAILURE;
 			}
 		}		
@@ -369,13 +386,13 @@ int parseParams(char ** params)
 			}
 			else
 			{
-				// print error message
+				fprintf(stderr, "%s: %s'%s'\n", app_name, err_msg_missing_arg, command_name);
+				printusage();
 				return EXIT_FAILURE;
 			}
 		}
 		else if(strcmp((*params), command_user) == 0)
 		{
-			// @todo check if user exists
 			m_Parameters[index].func = &do_user;
 			params++;
 			if (*params != NULL)
@@ -389,7 +406,6 @@ int parseParams(char ** params)
 				{
 					char * pEnd = 0;
 					uid_t uid = strtol(*params, &pEnd, 10);
-					//strtol(*params, &pEnd, 10);
 					if ((size_t) (pEnd - *params) == strlen(*params) && getpwuid(uid) != NULL)
 					{
 						m_Parameters[index].param = *(params);
@@ -397,6 +413,7 @@ int parseParams(char ** params)
 					else
 					{
 						fprintf(stderr, "%s: '%s' is not the name of a known user\n", app_name, *params);
+						printusage();
 						return EXIT_FAILURE;
 					}
 				}
@@ -405,6 +422,7 @@ int parseParams(char ** params)
 			{
 				// print error message
 				fprintf(stderr, "%s: %s '%s'\n", app_name, err_msg_missing_arg, command_user);
+				printusage();
 				return EXIT_FAILURE;
 			}
 		}
@@ -421,19 +439,22 @@ int parseParams(char ** params)
 			{
 				if (strlen((*params)) != 1)
 				{
-					// @todo parameter must only be one character exception
+					fprintf(stderr, "%s: Arguments to type should only contain one letter\n", app_name);
+					printusage();
 					return EXIT_FAILURE;
 				}
 				if (get_type(*params) == 0)
 				{
 					fprintf(stderr, "%s: unknown argument to -type: %s", app_name, *params);
+					printusage();
 					return EXIT_FAILURE;
 				}
 				m_Parameters[index].param = *params;
 			}
 			else
 			{
-				// @todo missing argument error
+				fprintf(stderr, "%s: %s'%s'\n", app_name, err_msg_missing_arg, command_type);
+				printusage();
 				return EXIT_FAILURE;
 			}
 		}
@@ -448,6 +469,7 @@ int parseParams(char ** params)
 			{
 				fprintf(stderr, "paths must exceed the expression\n");
 			}
+			printusage();
 			return EXIT_FAILURE;
 		}
 		index++;
@@ -457,7 +479,7 @@ int parseParams(char ** params)
 	return EXIT_SUCCESS;
 }
 
-int do_print(char * path, char * param)
+static int do_print(char * path, char * param)
 {
 	param = param;
 	fprintf(stdout, "%s\n", path);
@@ -465,7 +487,7 @@ int do_print(char * path, char * param)
 }
 
 
-int do_user(char * path, char * param)
+static int do_user(char * path, char * param)
 {	
 #ifdef LOG_ENABLED
 	do_log("do_user...");
@@ -506,7 +528,7 @@ int do_user(char * path, char * param)
 	}	
 }
 
-int do_nouser(char * path, char * param)
+static int do_nouser(char * path, char * param)
 {
 #ifdef LOG_ENABLED
 	do_log("do_nouser...");
@@ -515,14 +537,13 @@ int do_nouser(char * path, char * param)
 	struct passwd *get_uid;
 	struct stat buf;
 	int item_uid;
-	//int uid;
 
 	// unused parameter warning
 	param = param;
 
-	if(stat(path, &buf) == -1)
+	if(stat(path, &buf) < 0)
 	{
-		perror("stat");
+		fprintf(stderr, "%s: '%s': %s\n", app_name, path, strerror(errno));
 		return EXIT_FAILURE;
 	}
 	item_uid = buf.st_uid;
@@ -539,7 +560,7 @@ int do_nouser(char * path, char * param)
 	
 }
 
-int do_name(char *path, char *pattern)
+static int do_name(char *path, char *pattern)
 {
 #ifdef LOG_ENABLED
 	do_log("do_name...");
@@ -571,7 +592,7 @@ int do_path(char *path, char *pattern)
     return EXIT_FAILURE;
 }
 
-int do_ls(char * path, char * param)
+static int do_ls(char * path, char * param)
 {	
 #ifdef LOG_ENABLED
 	do_log("do_ls...");
@@ -700,14 +721,8 @@ int do_ls(char * path, char * param)
 	}
 
 	//name
-	/*
-	char * name = get_Name(path);
-	if (name != NULL)
-	{
-		printf("%s", name);
-	}
-	*/
 	printf("%s", path);
+
 	// -> softlink
 	errno = 0;
 	retVal = readlink(path, linkPath, PATH_MAX-2);
@@ -729,7 +744,7 @@ int do_ls(char * path, char * param)
 	return EXIT_SUCCESS;
 }
 
-int do_type(char * path, char * param)
+static int do_type(char * path, char * param)
 {
 #ifdef LOG_ENABLED
 	do_log("do_type...");
@@ -747,7 +762,7 @@ int do_type(char * path, char * param)
 	return EXIT_FAILURE;
 }
 
-mode_t get_type(char * param)
+static mode_t get_type(char * param)
 {
 #ifdef LOG_ENABLED
 	do_log("get_type...");
@@ -793,7 +808,7 @@ mode_t get_type(char * param)
 	}
 }
 
-char * get_Name(char * path)
+static char * get_Name(char * path)
 {
 #ifdef LOG_ENABLED
 	do_log("get_Name...");
@@ -823,17 +838,18 @@ char * get_Name(char * path)
 int myfind(char * path, char ** params)
 {
 	// count params
-	int cnt = 0; // this has to be global
+	int cnt = 0;
 	int retVal = 0;
+	char ** temp = params;
 
-	while (*params != NULL)
+	while (*temp != NULL)
 	{
 		// @todo find a better way... this will not work
-		if ((*params)[0] == '-')
+		if ((*temp)[0] == '-')
 		{
 			cnt++;
 		}
-		params++;
+		temp++;
 	}
 
 	// create mParamsArray
@@ -842,8 +858,7 @@ int myfind(char * path, char ** params)
 	// check if successful
 	if (p_mParameters == NULL)
 	{
-		// @todo print error message mem alloc failed
-		fprintf(stderr, "memory alloc failed in myfind\n");
+		fprintf(stderr, "%s: %s\n", app_name, strerror(ENOMEM));
 		return EXIT_FAILURE;
 	}
 
@@ -854,6 +869,20 @@ int myfind(char * path, char ** params)
 	free(p_mParameters);
 
 	return retVal;
+}
+
+static void printusage(void) {
+	/*
+	printf("\nUsage: %s <path> [action]\n\n"\
+		"actions:\n"\
+		" -user <name>|<uid>\n"\
+		" -nouser\n"\
+		" -name <pattern>\n"\
+		" -path <pattern>\n"\
+		" -type [bcdpfls]\n"\
+		" -print\n"\
+		" -ls\n\n", app_name);
+		*/
 }
 
 #ifdef LOG_ENABLED
