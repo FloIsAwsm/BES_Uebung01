@@ -47,6 +47,8 @@ const char * command_path = "-path";
 /* directory names */
 const char* upperDir = "..";
 const char* currentDir = ".";
+/* environment */
+const char* env_posixly_correct = "POSIXLY_CORRECT";
 
 /* type names */
 const char * type_dir = "d";
@@ -63,8 +65,9 @@ int do_log(char * msg);
 #endif 
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief flag to determine if params contain a print
+ * @details if params do not contain at least 1 print function (either ls or print)
+ * a print function has to be printed
  */
 static bool containsPrint = false;
 
@@ -113,19 +116,20 @@ typedef struct
 } sParam;
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief an array containing function pointers and parameters for them
+ * @details our parameters get converted to function pointers and a parameter
+ * so we do not have to use multiple strcmp calls on every file or directory
  */
 static sParam m_Parameters [MAX_PARAMS];
 
 /**
- * @brief [brief description]
+ * @brief prints a path in ls format
  * @details [long description]
  * 
- * @param path [description]
- * @param param [description]
+ * @param path the path of the file or directory to be printed
+ * @param param always NULL
  * 
- * @return [description]
+ * @return EXIT_FAILURE on error, EXIT_SUCCESS otherwise
  */
 int do_ls(char *path, char *pattern);
 
@@ -185,31 +189,31 @@ int do_path(char * path, char * pattern);
 int do_print(char * path, char * param);
 
 /**
- * @brief [brief description]
+ * @brief determines if a file is of a specific type
  * @details [long description]
  * 
- * @param path [description]
- * @param type [description]
+ * @param path file or directory to be tested
+ * @param type a string containing a letter for a specific type
  * 
- * @return [description]
+ * @return EXIT_SUCCESS if the file is of that type, EXIT_FAILURE otherwise
  */
 int do_type(char * path, char * type);
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief converts a c string with one letter into a type bitmask
+ * @details converts a 
  * 
- * @param param [description]
- * @return [description]
+ * @param param c string containing the type specifier
+ * @return the bitmask defined by param, 0 on failure
  */
 mode_t get_type(char * param);
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief converts a path into a filename
+ * @details returns the filename of the current path
  * 
- * @param path [description]
- * @return [description]
+ * @param path the path with the filename at the end
+ * @return a pointer to the start of the filename
  */
 char * get_Name(char * path);
 
@@ -274,11 +278,10 @@ int do_dir(char * dir, char ** params)
 		if (path == NULL)
 		{
 			// @todo print error message
-			fprintf(stderr, "memory allocation failed in do_dir\n");
+			fprintf(stderr, "%s\n", strerror(ENOMEM));
 			return EXIT_FAILURE;
 		}
 		int len = snprintf(path, size, "%s/%s", dir, item->d_name);
-		//int len = snprintf(path, sizeof(path)-1, "%s/%s", dir, item->d_name);
 		path[len] = 0;
 		if(item->d_type == DT_DIR)
 		{
@@ -377,11 +380,31 @@ int parseParams(char ** params)
 			params++;
 			if (*params != NULL)
 			{
-				m_Parameters[index].param = *(params);
+				struct passwd * user = getpwnam(*params);
+				if (user != NULL)
+				{
+					m_Parameters[index].param = *(params);
+				}
+				else
+				{
+					char * pEnd = 0;
+					uid_t uid = strtol(*params, &pEnd, 10);
+					//strtol(*params, &pEnd, 10);
+					if ((size_t) (pEnd - *params) == strlen(*params) && getpwuid(uid) != NULL)
+					{
+						m_Parameters[index].param = *(params);
+					}
+					else
+					{
+						fprintf(stderr, "%s: '%s' is not the name of a known user\n", app_name, *params);
+						return EXIT_FAILURE;
+					}
+				}
 			}
 			else
 			{
 				// print error message
+				fprintf(stderr, "%s: %s '%s'\n", app_name, err_msg_missing_arg, command_user);
 				return EXIT_FAILURE;
 			}
 		}
@@ -449,31 +472,28 @@ int do_user(char * path, char * param)
 #endif
 
 	struct stat buf;
-	long int uid;
-	long int item_uid;
-	struct passwd *get_uid;
-	char *pEnd;
+	uid_t uid;
+	uid_t item_uid;
+	struct passwd * get_uid;
+	char * pEnd;
 	
 	errno = 0;
 	if(stat(path, &buf) < 0)
 	{
-		//perror("stat");
 		fprintf(stderr, "%s: '%s': %s\n", app_name, path, strerror(errno));
 		return EXIT_FAILURE;
 	}
-	// @todo try assuming param is a userid first...
-	// therefore check useage of strtol(...)
-	// link: http://man7.org/linux/man-pages/man3/strtol.3.html
-	
+
 	item_uid = buf.st_uid;
+	// assume param is a username
 	get_uid = getpwnam(param);
-	if(get_uid == NULL) /* no existing user with entered username */
+	if(get_uid != NULL) /* no existing user with entered username */
 	{
-		uid = strtol(param,&pEnd,10); /* parameter is an UID */
+		uid = get_uid->pw_uid;	/* parameter is a username */
 	}
 	else
 	{
-		uid = get_uid->pw_uid;	/* parameter is a username */
+		uid = (uid_t) strtol(param, &pEnd, 10); /* parameter is an UID */
 	}
 
 	if(item_uid == uid)
@@ -558,43 +578,110 @@ int do_ls(char * path, char * param)
 #endif
 
 	param = param;
+	unsigned long blocks;
 	struct stat fileStat;
 	char linkPath[PATH_MAX];
 	const int timeString_size = 15;
 	char timeString[timeString_size]; //Aug  4  14:55\0
 	int retVal = 0;
 
-    if(stat(path, &fileStat) != 0)
+	errno = 0;
+    if(lstat(path, &fileStat) != 0)
     {
+    	fprintf(stderr, "%s: '%s': %s\n", app_name, path, strerror(errno));
         return EXIT_FAILURE;
     }
 	
-	printf("%d %d ", (int) fileStat.st_ino, (int) fileStat.st_blocks);
+	blocks = (unsigned long) fileStat.st_blocks;
+	if (getenv(env_posixly_correct) == NULL)
+	{
+		blocks /= 2;
+	}
+	printf("%6lu %4lu ", (unsigned long) fileStat.st_ino, (unsigned long) (fileStat.st_blocks / 2));
 	
 	printf( (S_ISDIR(fileStat.st_mode)) ? "d" : "-");
     printf( (fileStat.st_mode & S_IRUSR) ? "r" : "-");
     printf( (fileStat.st_mode & S_IWUSR) ? "w" : "-");
-    printf( (fileStat.st_mode & S_IXUSR) ? "x" : "-");
+    if ((fileStat.st_mode & S_IXUSR) && !(fileStat.st_mode & S_ISUID))
+    {
+    	printf("x");
+    }
+    else if((fileStat.st_mode & S_IXUSR) && (fileStat.st_mode & S_ISUID))
+    {
+    	printf("s");
+    }
+    else if(!(fileStat.st_mode & S_IXUSR) && (fileStat.st_mode & S_ISUID))
+    {
+    	printf("S");
+    }
+    else
+    {
+    	printf("-");
+    }
     printf( (fileStat.st_mode & S_IRGRP) ? "r" : "-");
     printf( (fileStat.st_mode & S_IWGRP) ? "w" : "-");
-    printf( (fileStat.st_mode & S_IXGRP) ? "x" : "-");
+    if ((fileStat.st_mode & S_IXGRP) && !(fileStat.st_mode & S_ISGID))
+    {
+    	printf("x");
+    }
+    else if((fileStat.st_mode & S_IXGRP) && (fileStat.st_mode & S_ISGID))
+    {
+    	printf("s");
+    }
+    else if(!(fileStat.st_mode & S_IXGRP) && (fileStat.st_mode & S_ISGID))
+    {
+    	printf("S");
+    }
+    else
+    {
+    	printf("-");
+    }
     printf( (fileStat.st_mode & S_IROTH) ? "r" : "-");
     printf( (fileStat.st_mode & S_IWOTH) ? "w" : "-");
-    printf( (fileStat.st_mode & S_IXOTH) ? "x" : "-");
+    if ((fileStat.st_mode & S_IXOTH) && !(fileStat.st_mode & S_ISVTX))
+    {
+    	printf("x");
+    }
+    else if((fileStat.st_mode & S_IXOTH) && (fileStat.st_mode & S_ISVTX))
+    {
+    	printf("t");
+    }
+    else if(!(fileStat.st_mode & S_IXOTH) && (fileStat.st_mode & S_ISVTX))
+    {
+    	printf("T");
+    }
+    else
+    {
+    	printf("-");
+    }
 
     // number of links
-    printf(" %d ", (int) fileStat.st_nlink);
+    printf(" %3d ", (int) fileStat.st_nlink);
 	
 	// username struct passwd *getpwuid(uid_t uid);
 	struct passwd * user = getpwuid(fileStat.st_uid);
-	printf("%s ", user->pw_name);
+	if(user != NULL)
+	{
+		printf("%-8s ", user->pw_name);
+	}
+	else
+	{
+		printf("%-8lu ", (unsigned long) fileStat.st_uid);
+	}
 	
 	// groupname struct group *getgrgid(gid_t gid);
 	struct group * grp = getgrgid(fileStat.st_gid);
-	printf("%s ", grp->gr_name);
+	if(grp != NULL)
+	{
+		printf("%-8s ", grp->gr_name);
+	}
+	else
+	{
+		printf("%-8lu ", (unsigned long) fileStat.st_gid);
+	}
 
 	// size in bytes
-	printf("%d ", (int) fileStat.st_size);
+	printf("%8lu ", (unsigned long) fileStat.st_size);
 	
 	// last modification
 	struct tm * modTime;
@@ -623,8 +710,6 @@ int do_ls(char * path, char * param)
 	printf("%s", path);
 	// -> softlink
 	errno = 0;
-	
-		
 	retVal = readlink(path, linkPath, PATH_MAX-2);
 	if (retVal < 0)
 	{
@@ -651,9 +736,9 @@ int do_type(char * path, char * param)
 #endif
 
 	struct stat mstat;
-	if(stat(path, &mstat) == 0)
+	if(lstat(path, &mstat) == 0)
 	{
-		if((mstat.st_mode & get_type(param)) != 0)
+		if(((mstat.st_mode & S_IFMT) == get_type(param)) != 0)
 		{
 			return EXIT_SUCCESS;
 		}
@@ -686,7 +771,7 @@ mode_t get_type(char * param)
 	}
 	else if(strcmp(param, type_file) == 0)
 	{
-		return S_IFMT;
+		return S_IFREG;
 	}
 	else if(strcmp(param, type_link) == 0)
 	{
