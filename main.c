@@ -19,7 +19,7 @@
 int main(int argc, char** argv)
 {
 	/* first write the application name to a global variable */
-	app_name = argv[0];
+	//app_name = argv[0];
 	//char ** temp = argv;
 	/* prevent warnings regarding unused params */
 	argc = argc;
@@ -33,13 +33,5 @@ int main(int argc, char** argv)
 	printf("\n");
 	*/
 
-	if(argv[1] != NULL && IsValidPath(argv[1]))
-	{
-		return do_dir(argv[1], (argv+2));
-	}
-	else
-	{
-
-		return do_dir(".", (argv+1));
-	}
+	return myfind(argv);
 }

@@ -65,13 +65,6 @@ int do_log(char * msg);
 #endif 
 
 /**
- * @brief flag to determine if params contain a print
- * @details if params do not contain at least 1 print function (either ls or print)
- * a print function has to be printed
- */
-static bool containsPrint = false;
-
-/**
  * @brief global variable for the application name
  */
 static char * app_name;
@@ -107,7 +100,7 @@ static int do_dir(char * dir, char ** params);
  * @param params the parameters we have to process
  * @return EXIT_SUCCESS if all commands are understood, EXIT_FAILURE otherwise 
  */
-static int parseParams(char ** params); // @todo
+static int parseParams(const char * path, const char * const * params); // @todo
 
 /**
  * @brief calls the parameter functions on a path
@@ -117,7 +110,7 @@ static int parseParams(char ** params); // @todo
  * @param path the path we have to use the parameters on
  * @return EXIT_FAILURE or EXIT_SUCCESS
  */
-static int handleParams(char * path);
+//static int handleParams(char * path);
 
 /**
  * @brief prints a path in ls format
@@ -128,7 +121,7 @@ static int handleParams(char * path);
  * 
  * @return EXIT_FAILURE on error, EXIT_SUCCESS otherwise
  */
-static int do_ls(char *path, char *pattern);
+static int do_ls(const char *path, const char *pattern);
 
 /**
  * @brief function which matches a given path with the pattern
@@ -139,7 +132,7 @@ static int do_ls(char *path, char *pattern);
  * 
  * @return EXIT_SUCCESS or EXIT_FAILURE
  */
-static int do_name(char *path, char *pattern);
+static int do_name(const char *path, const char *pattern);
 
 /**
  * @brief checks a file if the owner of it equals the entered user
@@ -150,7 +143,7 @@ static int do_name(char *path, char *pattern);
  * 
  * @return EXIT_SUCCESS if the file or directory matches the user in param, EXIT_FAILURE otherwise
  */
-static int do_user(char * path, char * param);
+static int do_user(const char * path, const  char * param);
 
 /**
  * @brief checks a file if it has a valid owner
@@ -161,7 +154,7 @@ static int do_user(char * path, char * param);
  * 
  * @return returns EXIT_SUCCESS, if the file has no valid owner, EXIT_FAILURE otherwise
  */
-static int do_nouser(char * path, char * param);
+static int do_nouser(const char * path, const char * param);
 
 /**
  * @brief path with pattern matching
@@ -172,7 +165,7 @@ static int do_nouser(char * path, char * param);
  * 
  * @return EXIT_SUCCESS or EXIT_FAILURE
  */
-static int do_path(char * path, char * pattern);
+static int do_path(const char * path, const char * pattern);
 
 /**
  * @brief prints the path on the console
@@ -183,7 +176,7 @@ static int do_path(char * path, char * pattern);
  * 
  * @return always EXIT_SUCCESS
  */
-static int do_print(char * path, char * param);
+static int do_print(const char * path, const char * param);
 
 /**
  * @brief determines if a file is of a specific type
@@ -194,7 +187,7 @@ static int do_print(char * path, char * param);
  * 
  * @return EXIT_SUCCESS if the file is of that type, EXIT_FAILURE otherwise
  */
-static int do_type(char * path, char * type);
+static int do_type(const char * path, const char * type);
 
 /**
  * @brief converts a c string with one letter into a type bitmask
@@ -203,7 +196,7 @@ static int do_type(char * path, char * type);
  * @param param c string containing the type specifier
  * @return the bitmask defined by param, 0 on failure
  */
-static mode_t get_type(char * param);
+static mode_t get_type(const char * param);
 
 /**
  * @brief converts a path into a filename
@@ -212,15 +205,15 @@ static mode_t get_type(char * param);
  * @param path the path with the filename at the end
  * @return a pointer to the start of the filename
  */
-static char * get_Name(char * path);
+static char * get_Name(const char * path);
 
 /**
- * @brief prints the useage of this module
+ * @brief prints the correct useage of this module
  */
 static void printusage(void);
 
 
-static bool IsValidPath(char * param)
+static bool IsValidPath(const char * param)
 {
 	if(param == NULL)
 	{
@@ -240,7 +233,7 @@ static int do_dir(const char * dir, const char * const * params)
 	DIR * pdir;		
 	struct dirent * item;
 
-	handleParams(dir);
+	parseParams(dir, params);
 	
 	errno = 0;
 	pdir = opendir(dir);
@@ -273,7 +266,7 @@ static int do_dir(const char * dir, const char * const * params)
 		}
 		else
 		{
-			handleParams(path, params);
+			parseParams(path, params);
 		}
 		free(path);
 		errno = 0;
@@ -325,9 +318,10 @@ static int parseParams(const char * path, const char * const * params)
 #ifdef LOG_ENABLED
 	do_log("parseParams...");
 #endif
+	bool containsPrint = false;
 	int retVal = EXIT_SUCCESS;
 	int index = 0;
-	for(size_t i = 0; params[i] != NULL && retVal == EXIT_SUCCESS; ++i)
+	for(size_t i = 0; (params[i] != NULL) && (retVal == EXIT_SUCCESS); ++i)
 	{
 		if(strcmp(params[i], command_print) == 0)
 		{
@@ -374,28 +368,7 @@ static int parseParams(const char * path, const char * const * params)
 			//m_Parameters[index].func = &do_user;
 			if (params[i] != NULL)
 			{
-				struct passwd * user = getpwnam(params[i]);
-				if (user != NULL)
-				{
-					//m_Parameters[index].param = *(params);
-					do_user(path, params[i]);
-				}
-				else
-				{
-					char * pEnd = 0;
-					uid_t uid = strtol(params[i], &pEnd, 10);
-					if ((size_t) (pEnd - params[i]) == strlen(params[i]) && getpwuid(uid) != NULL)
-					{
-						//m_Parameters[index].param = *(params);
-						//do_user() @todo
-					}
-					else
-					{
-						fprintf(stderr, "%s: '%s' is not the name of a known user\n", app_name, *params);
-						printusage();
-						return EXIT_FAILURE;
-					}
-				}
+				retVal = do_user(path, params[i]);
 			}
 			else
 			{
@@ -458,7 +431,7 @@ static int parseParams(const char * path, const char * const * params)
 	return EXIT_SUCCESS;
 }
 
-static int do_print(char * path, char * param)
+static int do_print(const char * path, const char * param)
 {
 	param = param;
 	fprintf(stdout, "%s\n", path);
@@ -466,7 +439,7 @@ static int do_print(char * path, char * param)
 }
 
 
-static int do_user(char * path, char * param)
+static int do_user(const char * path, const char * param)
 {	
 #ifdef LOG_ENABLED
 	do_log("do_user...");
@@ -475,9 +448,54 @@ static int do_user(char * path, char * param)
 	struct stat buf;
 	uid_t uid;
 	uid_t item_uid;
-	struct passwd * get_uid;
+	//struct passwd * get_uid;
 	char * pEnd;
-	
+
+	// first check if parameters are correct
+	struct passwd * user = getpwnam(param);
+	if (user == NULL)
+	{
+		char * pEnd = 0;
+		uid_t uid = strtol(params[i], &pEnd, 10);
+		errno = 0;
+		if ((size_t) (pEnd - params[i]) == strlen(params[i]) && (user = getpwuid(uid)) != NULL)
+		{
+			//m_Parameters[index].param = *(params);
+			//do_user() @todo
+			errno = 0;
+			if(stat(path, &buf) < 0)
+			{
+				fprintf(stderr, "%s: '%s': %s\n", app_name, path, strerror(errno));
+				return EXIT_FAILURE;
+			}
+		}
+		else
+		{
+			if(errno == ENOENT)
+			{
+				fprintf(stderr, "%s: '%s' is not the name of a known user\n", app_name, param);
+				printusage();
+				return EXIT_FAILURE;
+			}
+			else
+			{
+				fprintf(stderr, "%s: %s: %s\n", app_name, strerror(errno), param);
+				return EXIT_FAILURE;
+			}
+		}
+	}
+
+
+	if (user->pw_uid == buf.st_uid)
+	{
+		return EXIT_SUCCESS;
+	}
+	else
+	{
+		return EXIT_FAILURE;
+	}
+
+
 	errno = 0;
 	if(stat(path, &buf) < 0)
 	{
@@ -485,6 +503,7 @@ static int do_user(char * path, char * param)
 		return EXIT_FAILURE;
 	}
 
+	// get uid of current path
 	item_uid = buf.st_uid;
 	// assume param is a username
 	get_uid = getpwnam(param);
@@ -507,7 +526,7 @@ static int do_user(char * path, char * param)
 	}	
 }
 
-static int do_nouser(char * path, char * param)
+static int do_nouser(const char * path, const char * param)
 {
 #ifdef LOG_ENABLED
 	do_log("do_nouser...");
@@ -539,7 +558,7 @@ static int do_nouser(char * path, char * param)
 	
 }
 
-static int do_name(char *path, char *pattern)
+static int do_name(const char *path, const char *pattern)
 {
 #ifdef LOG_ENABLED
 	do_log("do_name...");
@@ -555,7 +574,7 @@ static int do_name(char *path, char *pattern)
     return EXIT_FAILURE;
 }
 
-int do_path(char *path, char *pattern)
+int do_path(const char *path, const char *pattern)
 {
 #ifdef LOG_ENABLED
 	do_log("do_path...");
@@ -571,7 +590,7 @@ int do_path(char *path, char *pattern)
     return EXIT_FAILURE;
 }
 
-static int do_ls(char * path, char * param)
+static int do_ls(const char * path, const char * param)
 {	
 #ifdef LOG_ENABLED
 	do_log("do_ls...");
@@ -723,13 +742,14 @@ static int do_ls(char * path, char * param)
 	return EXIT_SUCCESS;
 }
 
-static int do_type(char * path, char * param)
+static int do_type(const char * path, const char * param)
 {
 #ifdef LOG_ENABLED
 	do_log("do_type...");
 #endif
 
 	struct stat mstat;
+	errno = 0;
 	if(lstat(path, &mstat) == 0)
 	{
 		if(((mstat.st_mode & S_IFMT) == get_type(param)) != 0)
@@ -737,11 +757,15 @@ static int do_type(char * path, char * param)
 			return EXIT_SUCCESS;
 		}
 	}
+	else
+	{
+		fprintf(stderr, "%s: %s: %s\n", app_name, strerror(errno), path);
+	}
 	
 	return EXIT_FAILURE;
 }
 
-static mode_t get_type(char * param)
+static mode_t get_type(const char * param)
 {
 #ifdef LOG_ENABLED
 	do_log("get_type...");
@@ -787,7 +811,7 @@ static mode_t get_type(char * param)
 	}
 }
 
-static char * get_Name(char * path)
+static char * get_Name(const char * path)
 {
 #ifdef LOG_ENABLED
 	do_log("get_Name...");
