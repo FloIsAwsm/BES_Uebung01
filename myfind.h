@@ -11,7 +11,6 @@
  * 
  * @version 100
  * 
- * @todo modify includes (move to myfind.c if possible)
  */
 
 #ifndef MYFIND_H
@@ -31,18 +30,28 @@
 
 /**
  * @brief error return code
- * @details defines the return code for an error from which we cannot recover
+ * @details defines the return code for an error from which we cannot recover.
+ * This is always the case if the input arguments are wrong. (e.g.: ./myfind . -type xy)
  */
 #define EXIT_ERROR -1
 
 /**
- * @brief [brief description]
- * @details [long description]
+ * @brief performs the find operation
+ * @details this is the only entry point for this module. It is given an cstring array 
+ * containing the application name, possibly a path, commands and their parameters.
  * 
- * @param path [description]
- * @param params [description]
+ * It can currently handle the following parameters:
+ * -print
+ * -ls
+ * -type [bcdpfls]
+ * -name <pattern>
+ * -path <pattern>
+ * -user <name>|<uid>
+ * -nouser
  * 
- * @return [description]
+ * @param params a cstring array in the following format: [application name][path](optional)[parameter][...][NULL]
+ * 
+ * @return EXIT_SUCCESS on success, EXIT_FAILURE otherwise
  */
 int myfind(const char * const * params);
 
