@@ -33,7 +33,7 @@
 
 /* Constants */
 /* defines */
-#define LOG_ENABLED
+//#define LOG_ENABLED
 /* Error messages */
 const char * err_msg_unknown_pred = "unknown predicate: ";
 const char * err_msg_missing_arg = "missing argument to ";
@@ -338,7 +338,7 @@ static int parseParams(const char * path, const char * const * params)
 	bool containsPrint = false;
 	int retVal = EXIT_SUCCESS;
 	//int index = 0;
-	for(size_t i = 0; (params[i] != NULL) && (retVal == EXIT_SUCCESS); ++i)
+	for(size_t i = 0; (params[i] != NULL) && (retVal == EXIT_SUCCESS); i++)
 	{
 		if(strcmp(params[i], command_print) == 0)
 		{
@@ -412,7 +412,7 @@ static int parseParams(const char * path, const char * const * params)
 				}
 				if (get_type(params[i]) == 0)
 				{
-					fprintf(stderr, "%s: unknown argument to -type: %s", app_name, params[i]);
+					fprintf(stderr, "%s: unknown argument to -type: %s\n", app_name, params[i]);
 					printusage();
 					return EXIT_ERROR;
 				}
@@ -424,7 +424,6 @@ static int parseParams(const char * path, const char * const * params)
 				printusage();
 				return EXIT_ERROR;
 			}
-			++i;
 		}
 		else
 		{
@@ -439,7 +438,6 @@ static int parseParams(const char * path, const char * const * params)
 			}
 			printusage();
 			return EXIT_ERROR;
-			
 		}
 	}
 	if (retVal != EXIT_SUCCESS)
@@ -481,29 +479,25 @@ static int do_user(const char * path, const char * param)
 		if ((size_t) (pEnd - param) == strlen(param) && (user = getpwuid(uid)) != NULL)
 		{
 			//m_Parameters[index].param = *(params);
-			//do_user() @todo
-			errno = 0;
-			if(stat(path, &buf) < 0)
-			{
-				fprintf(stderr, "%s: '%s': %s\n", app_name, path, strerror(errno));
-				return EXIT_FAILURE;
-			}
+			//do_user() @todo			
 		}
 		else
 		{
-			if(errno == ENOENT)
+			if(errno == 0)
 			{
 				fprintf(stderr, "%s: '%s' is not the name of a known user\n", app_name, param);
 				printusage();
 				return EXIT_ERROR;
 			}
-			else
+			else if(errno != 0)
 			{
 				fprintf(stderr, "%s: %s: %s\n", app_name, strerror(errno), param);
 				return EXIT_FAILURE;
 			}
+			return EXIT_FAILURE;
 		}
 	}
+	/*
 	else
 	{
 		if(errno == ENOENT)
@@ -518,8 +512,21 @@ static int do_user(const char * path, const char * param)
 			return EXIT_FAILURE;
 		}
 	}
+	*/
 
-
+	errno = 0;
+	if(lstat(path, &buf) != 0)
+	{
+		fprintf(stderr, "%s: '%s': %s\n", app_name, path, strerror(errno));
+		return EXIT_FAILURE;
+	}
+	/*
+	do_log("cmp user");
+	char buff[256];
+	int len = snprintf(buff, 255, "uid: %d item_uid: %d", user->pw_uid, buf.st_uid);
+	buff[len] = 0;
+	do_log(buff);
+	*/
 	if (user->pw_uid == buf.st_uid)
 	{
 		return EXIT_SUCCESS;
@@ -852,10 +859,10 @@ int myfind(const char * const * params)
 	while(params[i] != NULL)
 	{
 		//printf("%s \n", params[i]);
-		do_log((char *) params[i]);
+		//do_log((char *) params[i]);
 		i++;
 	}
-	printf("\n");
+	//printf("\n");
 
 	const char * path = ".";
 	// @todo if we do a validity check we do it here
