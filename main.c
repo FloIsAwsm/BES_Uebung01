@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include "myfind.h"
 
-int main(int argc, char** argv)
+int main(int argc, const char * const * argv)
 {
 	/* first write the application name to a global variable */
 	//app_name = argv[0];
